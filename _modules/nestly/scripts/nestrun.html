@@ -1,0 +1,393 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>nestly.scripts.nestrun &mdash; nestly v0.2 documentation</title>
+    <link rel="stylesheet" href="../../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '0.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <link rel="top" title="nestly v0.2 documentation" href="../../../index.html" />
+    <link rel="up" title="Module code" href="../../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">nestly v0.2 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for nestly.scripts.nestrun</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">nestrun.py - run commands based on control dictionaries.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">import</span> <span class="nn">csv</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">os.path</span>
+<span class="kn">import</span> <span class="nn">shlex</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+
+<span class="c"># Constants to be used as defaults.</span>
+<span class="n">MAX_PROCS</span> <span class="o">=</span> <span class="mi">2</span>                    <span class="c"># Set the default maximum number of child processes that can be spawned.</span>
+<span class="n">DRY_RUN</span> <span class="o">=</span> <span class="bp">False</span>                   <span class="c"># Run in dry_run mode, default is False.</span>
+
+
+<span class="k">def</span> <span class="nf">_terminate_procs</span><span class="p">(</span><span class="n">procs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Terminate all processes in the process dictionary</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&quot;Stopping all remaining processes&quot;</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">proc</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">procs</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;[</span><span class="si">%s</span><span class="s">] SIGTERM&quot;</span><span class="p">,</span> <span class="n">proc</span><span class="o">.</span><span class="n">pid</span><span class="p">)</span>
+        <span class="n">proc</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="invoke"><a class="viewcode-back" href="../../../nestly.scripts.html#nestly.scripts.nestrun.invoke">[docs]</a><span class="k">def</span> <span class="nf">invoke</span><span class="p">(</span><span class="n">max_procs</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">json_files</span><span class="p">):</span>
+    <span class="n">running_procs</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">all_procs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">files</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">json_files</span><span class="p">)</span>
+    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">running_procs</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">max_procs</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">json_file</span> <span class="o">=</span> <span class="n">files</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">running_procs</span><span class="p">:</span>
+                    <span class="n">write_summary</span><span class="p">(</span><span class="n">all_procs</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;summary_file&#39;</span><span class="p">])</span>
+                    <span class="k">return</span>
+                <span class="k">break</span>
+            <span class="n">g</span> <span class="o">=</span> <span class="n">worker</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">json_file</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">proc</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+                <span class="c"># OSError thrown when command couldn&#39;t be started</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s">&quot;Exception starting </span><span class="si">%s</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">json_file</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;stop_on_error&#39;</span><span class="p">]:</span>
+                    <span class="n">_terminate_procs</span><span class="p">(</span><span class="n">running_procs</span><span class="p">)</span>
+                    <span class="n">write_summary</span><span class="p">(</span><span class="n">all_procs</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;summary_file&#39;</span><span class="p">])</span>
+                    <span class="k">return</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">all_procs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">proc</span><span class="p">)</span>
+                <span class="n">running_procs</span><span class="p">[</span><span class="n">proc</span><span class="o">.</span><span class="n">pid</span><span class="p">]</span> <span class="o">=</span> <span class="n">proc</span><span class="p">,</span> <span class="n">g</span>
+
+        <span class="n">pid</span><span class="p">,</span> <span class="n">status</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+
+        <span class="c"># Pull the actual exit status - high byte of 16-bit number</span>
+        <span class="n">exit_status</span> <span class="o">=</span> <span class="n">status</span> <span class="o">&gt;&gt;</span> <span class="mi">8</span>
+        <span class="n">proc</span><span class="p">,</span> <span class="n">g</span> <span class="o">=</span> <span class="n">running_procs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span>
+        <span class="n">proc</span><span class="o">.</span><span class="n">complete</span><span class="p">(</span><span class="n">exit_status</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">g</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;worker generators should only yield once&#39;</span><span class="p">)</span>
+
+        <span class="c"># Check exit status, cancel jobs if stop_on_error specified and</span>
+        <span class="c"># non-zero</span>
+        <span class="k">if</span> <span class="n">exit_status</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&#39;[</span><span class="si">%s</span><span class="s">] </span><span class="si">%s</span><span class="s"> Finished with non-zero exit status </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span>
+                    <span class="n">pid</span><span class="p">,</span> <span class="n">proc</span><span class="o">.</span><span class="n">working_dir</span><span class="p">,</span> <span class="n">exit_status</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;stop_on_error&#39;</span><span class="p">]:</span>
+                <span class="n">_terminate_procs</span><span class="p">(</span><span class="n">running_procs</span><span class="p">)</span>
+                <span class="k">break</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;[</span><span class="si">%s</span><span class="s">] </span><span class="si">%s</span><span class="s"> Finished with </span><span class="si">%s</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">pid</span><span class="p">,</span> <span class="n">proc</span><span class="o">.</span><span class="n">working_dir</span><span class="p">,</span>
+                    <span class="n">exit_status</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="write_summary"><a class="viewcode-back" href="../../../nestly.scripts.html#nestly.scripts.nestrun.write_summary">[docs]</a><span class="k">def</span> <span class="nf">write_summary</span><span class="p">(</span><span class="n">all_procs</span><span class="p">,</span> <span class="n">summary_file</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Write a summary of all run processes to summary_file in tab-delimited</span>
+<span class="sd">    format.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">summary_file</span><span class="p">:</span>
+        <span class="k">return</span>
+
+    <span class="k">with</span> <span class="n">summary_file</span><span class="p">:</span>
+        <span class="n">writer</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">writer</span><span class="p">(</span><span class="n">summary_file</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s">&#39;</span><span class="se">\t</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">lineterminator</span><span class="o">=</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+        <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">((</span><span class="s">&#39;directory&#39;</span><span class="p">,</span> <span class="s">&#39;command&#39;</span><span class="p">,</span> <span class="s">&#39;start_time&#39;</span><span class="p">,</span> <span class="s">&#39;end_time&#39;</span><span class="p">,</span>
+            <span class="s">&#39;run_time&#39;</span><span class="p">,</span> <span class="s">&#39;exit_status&#39;</span><span class="p">,</span> <span class="s">&#39;result&#39;</span><span class="p">))</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="p">((</span><span class="n">p</span><span class="o">.</span><span class="n">working_dir</span><span class="p">,</span> <span class="s">&#39; &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">command</span><span class="p">),</span> <span class="n">p</span><span class="o">.</span><span class="n">start_time</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">end_time</span><span class="p">,</span>
+                <span class="n">p</span><span class="o">.</span><span class="n">running_time</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">return_code</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">status</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">all_procs</span><span class="p">)</span>
+        <span class="n">writer</span><span class="o">.</span><span class="n">writerows</span><span class="p">(</span><span class="n">rows</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="template_subs_file"><a class="viewcode-back" href="../../../nestly.scripts.html#nestly.scripts.nestrun.template_subs_file">[docs]</a><span class="k">def</span> <span class="nf">template_subs_file</span><span class="p">(</span><span class="n">in_file</span><span class="p">,</span> <span class="n">out_fobj</span><span class="p">,</span> <span class="n">d</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Substitute template arguments in in_file from variables in d, write the</span>
+<span class="sd">    result to out_fobj.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">in_file</span><span class="p">,</span> <span class="s">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">in_fobj</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">in_fobj</span><span class="p">:</span>
+            <span class="n">out_fobj</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">line</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">d</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="NestlyProcess"><a class="viewcode-back" href="../../../nestly.scripts.html#nestly.scripts.nestrun.NestlyProcess">[docs]</a><span class="k">class</span> <span class="nc">NestlyProcess</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Metadata about a process run</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">command</span><span class="p">,</span> <span class="n">working_dir</span><span class="p">,</span> <span class="n">popen</span><span class="p">,</span> <span class="n">log_name</span><span class="o">=</span><span class="s">&#39;log.txt&#39;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">command</span> <span class="o">=</span> <span class="n">command</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">working_dir</span> <span class="o">=</span> <span class="n">working_dir</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log_name</span> <span class="o">=</span> <span class="n">log_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">popen</span> <span class="o">=</span> <span class="n">popen</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pid</span> <span class="o">=</span> <span class="n">popen</span><span class="o">.</span><span class="n">pid</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">return_code</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">end_time</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s">&#39;RUNNING&#39;</span>
+
+<div class="viewcode-block" id="NestlyProcess.terminate"><a class="viewcode-back" href="../../../nestly.scripts.html#nestly.scripts.nestrun.NestlyProcess.terminate">[docs]</a>    <span class="k">def</span> <span class="nf">terminate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">popen</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">end_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s">&#39;TERMINATED&#39;</span>
+</div>
+<div class="viewcode-block" id="NestlyProcess.complete"><a class="viewcode-back" href="../../../nestly.scripts.html#nestly.scripts.nestrun.NestlyProcess.complete">[docs]</a>    <span class="k">def</span> <span class="nf">complete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">return_code</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">return_code</span> <span class="o">=</span> <span class="n">return_code</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s">&#39;COMPLETE&#39;</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">return_code</span> <span class="k">else</span> <span class="s">&#39;FAILED&#39;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">end_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+</div>
+    <span class="nd">@property</span>
+<div class="viewcode-block" id="NestlyProcess.running_time"><a class="viewcode-back" href="../../../nestly.scripts.html#nestly.scripts.nestrun.NestlyProcess.running_time">[docs]</a>    <span class="k">def</span> <span class="nf">running_time</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">end_time</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">None</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">end_time</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span>
+
+</div></div>
+<div class="viewcode-block" id="worker"><a class="viewcode-back" href="../../../nestly.scripts.html#nestly.scripts.nestrun.worker">[docs]</a><span class="k">def</span> <span class="nf">worker</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">json_file</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Handle parameter substitution and execute command as child process.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c"># PERHAPS TODO: Support either full or relative paths.</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">fp</span><span class="p">:</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
+    <span class="n">json_directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">json_file</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">p</span><span class="p">(</span><span class="o">*</span><span class="n">parts</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">json_directory</span><span class="p">,</span> <span class="o">*</span><span class="n">parts</span><span class="p">)</span>
+
+    <span class="c"># STDOUT and STDERR will be written to a log file in each job directory.</span>
+    <span class="n">log_file</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;log_file&#39;</span><span class="p">]</span>
+
+    <span class="c"># A template file will be written in each job directory, including the</span>
+    <span class="c"># substitution that was performed..</span>
+    <span class="n">savecmd_file</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;savecmd_file&#39;</span><span class="p">]</span>
+
+    <span class="c"># if a template file is being used, then we write out to it</span>
+    <span class="n">template_file</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;template_file&#39;</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">template_file</span><span class="p">:</span>
+        <span class="n">output_template</span> <span class="o">=</span> <span class="n">p</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">template_file</span><span class="p">))</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">output_template</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">out_fobj</span><span class="p">:</span>
+            <span class="n">template_subs_file</span><span class="p">(</span><span class="n">template_file</span><span class="p">,</span> <span class="n">out_fobj</span><span class="p">,</span> <span class="n">d</span><span class="p">)</span>
+
+        <span class="c"># Copy permissions to destination</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">copymode</span><span class="p">(</span><span class="n">template_file</span><span class="p">,</span> <span class="n">output_template</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">OSError</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">errno</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&quot;Couldn&#39;t copy permissions to </span><span class="si">%s</span><span class="s">: </span><span class="si">%s</span><span class="s">&quot;</span><span class="p">,</span>
+                        <span class="n">output_template</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span>
+
+    <span class="n">work</span> <span class="o">=</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;template&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">d</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">savecmd_file</span><span class="p">:</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">p</span><span class="p">(</span><span class="n">savecmd_file</span><span class="p">),</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">command_file</span><span class="p">:</span>
+            <span class="n">command_file</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">work</span> <span class="o">+</span> <span class="s">&quot;</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">)</span>
+
+    <span class="c"># View what actions will take place in dry_run mode.</span>
+    <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;dry_run&#39;</span><span class="p">]:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="s"> - Dry run of </span><span class="si">%s</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">p</span><span class="p">(),</span> <span class="n">work</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">p</span><span class="p">(</span><span class="n">log_file</span><span class="p">),</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">log</span><span class="p">:</span>
+                <span class="n">cmd</span> <span class="o">=</span> <span class="n">shlex</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">work</span><span class="p">)</span>
+                <span class="n">pr</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">log</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">log</span><span class="p">,</span> <span class="n">cwd</span><span class="o">=</span><span class="n">p</span><span class="p">())</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;[</span><span class="si">%d</span><span class="s">] Started </span><span class="si">%s</span><span class="s"> in </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">pr</span><span class="o">.</span><span class="n">pid</span><span class="p">,</span> <span class="n">work</span><span class="p">,</span> <span class="n">p</span><span class="p">())</span>
+                <span class="n">nestproc</span> <span class="o">=</span> <span class="n">NestlyProcess</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">p</span><span class="p">(),</span> <span class="n">pr</span><span class="p">)</span>
+                <span class="k">yield</span> <span class="n">nestproc</span>
+        <span class="k">except</span> <span class="ne">Exception</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="c"># Seems useful to print the command that failed to make the</span>
+            <span class="c"># traceback more meaningful.  Note that error output could get</span>
+            <span class="c"># mixed up if two processes encounter errors at the same instant</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="s"> - Error executing </span><span class="si">%s</span><span class="s"> - </span><span class="si">%s</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">p</span><span class="p">(),</span> <span class="n">work</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">e</span>
+
+</div>
+<div class="viewcode-block" id="extant_file"><a class="viewcode-back" href="../../../nestly.scripts.html#nestly.scripts.nestrun.extant_file">[docs]</a><span class="k">def</span> <span class="nf">extant_file</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    &#39;Type&#39; for argparse - checks that file exists but does not open.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">x</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentError</span><span class="p">(</span><span class="s">&quot;{0} does not exist&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">x</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">x</span>
+
+</div>
+<div class="viewcode-block" id="parse_arguments"><a class="viewcode-back" href="../../../nestly.scripts.html#nestly.scripts.nestrun.parse_arguments">[docs]</a><span class="k">def</span> <span class="nf">parse_arguments</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Grab options and json files.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">max_procs</span> <span class="o">=</span> <span class="n">MAX_PROCS</span>
+    <span class="n">dry_run</span> <span class="o">=</span> <span class="n">DRY_RUN</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">basicConfig</span><span class="p">(</span><span class="n">level</span><span class="o">=</span><span class="n">logging</span><span class="o">.</span><span class="n">INFO</span><span class="p">,</span> <span class="n">stream</span><span class="o">=</span><span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="p">,</span>
+                        <span class="n">format</span><span class="o">=</span><span class="s">&#39;</span><span class="si">%(asctime)s</span><span class="s"> * </span><span class="si">%(levelname)s</span><span class="s"> * </span><span class="si">%(message)s</span><span class="s">&#39;</span><span class="p">)</span>
+
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">(</span><span class="n">description</span><span class="o">=</span><span class="s">&quot;&quot;&quot;nestrun - substitute values</span>
+<span class="s">            into a template and run commands in parallel.&quot;&quot;&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-j&#39;</span><span class="p">,</span> <span class="s">&#39;--processes&#39;</span><span class="p">,</span> <span class="s">&#39;--local&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;local_procs&#39;</span><span class="p">,</span>
+            <span class="nb">type</span><span class="o">=</span><span class="nb">int</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;&quot;&quot;Run a maximum of N processes in parallel locally</span>
+<span class="s">            (default: </span><span class="si">%(default)s</span><span class="s">)&quot;&quot;&quot;</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s">&#39;N&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="n">MAX_PROCS</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--template&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;template&#39;</span><span class="p">,</span>
+            <span class="n">metavar</span><span class="o">=</span><span class="s">&quot;&#39;template text&#39;&quot;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;&quot;&quot;Command-execution template, e.g.</span>
+<span class="s">            bash {infile}. By default, nestrun executes the templatefile.&quot;&quot;&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--stop-on-error&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;store_true&#39;</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;&quot;&quot;Terminate remaining processes if any process</span>
+<span class="s">            returns non-zero exit status (default: </span><span class="si">%(default)s</span><span class="s">)&quot;&quot;&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--template-file&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;template_file&#39;</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s">&quot;FILE&quot;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s">&#39;Command-execution template file path.&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--save-cmd-file&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;savecmd_file&#39;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s">&quot;&quot;&quot;Name of the file that will contain the command that was</span>
+<span class="s">            executed.&quot;&quot;&quot;</span><span class="p">)</span>
+    <span class="n">log_group</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_mutually_exclusive_group</span><span class="p">()</span>
+    <span class="n">log_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--log-file&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&#39;log_file&#39;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="s">&#39;log.txt&#39;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s">&quot;&quot;&quot;Name of the file that will contain output of the executed</span>
+<span class="s">            command.&quot;&quot;&quot;</span><span class="p">)</span>
+    <span class="n">log_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--no-log&#39;</span><span class="p">,</span> <span class="n">dest</span><span class="o">=</span><span class="s">&quot;log_file&quot;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&quot;store_const&quot;</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="s">&#39;log.txt&#39;</span><span class="p">,</span> <span class="n">const</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">devnull</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;&quot;&quot;Don&#39;t create a log</span>
+<span class="s">            file&quot;&quot;&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--dry-run&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s">&#39;store_true&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;&quot;&quot;Dry run mode,</span>
+<span class="s">            does not execute commands.&quot;&quot;&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--summary-file&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">FileType</span><span class="p">(</span><span class="s">&#39;w&#39;</span><span class="p">),</span>
+            <span class="n">help</span><span class="o">=</span><span class="s">&quot;&quot;&quot;Write a summary of the run to the specified file&quot;&quot;&quot;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;json_files&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">extant_file</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="s">&#39;+&#39;</span><span class="p">,</span>
+            <span class="n">help</span><span class="o">=</span><span class="s">&#39;Nestly control dictionaries&#39;</span><span class="p">)</span>
+    <span class="n">arguments</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+
+    <span class="n">template</span> <span class="o">=</span> <span class="n">arguments</span><span class="o">.</span><span class="n">template</span>
+
+    <span class="c"># Make sure that either a template or a template file was given</span>
+    <span class="k">if</span> <span class="n">arguments</span><span class="o">.</span><span class="n">template_file</span><span class="p">:</span>
+        <span class="c"># if given a template file, the default is to run the input</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">arguments</span><span class="o">.</span><span class="n">template</span><span class="p">:</span>
+            <span class="n">template</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;.&#39;</span><span class="p">,</span>
+                    <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">arguments</span><span class="o">.</span><span class="n">template_file</span><span class="p">))</span>
+
+            <span class="c"># If using the default argument, the template must be executable:</span>
+            <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">access</span><span class="p">(</span><span class="n">arguments</span><span class="o">.</span><span class="n">template_file</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">X_OK</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span>
+                    <span class="n">arguments</span><span class="o">.</span><span class="n">dry_run</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">SystemExit</span><span class="p">(</span>
+                        <span class="s">&quot;{0} is not executable. Specify a template.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                    <span class="n">arguments</span><span class="o">.</span><span class="n">template_file</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="p">(</span><span class="n">arguments</span><span class="o">.</span><span class="n">template</span> <span class="ow">or</span> <span class="n">arguments</span><span class="o">.</span><span class="n">template_file</span><span class="p">):</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="s">&quot;Error: Please specify either a template &quot;</span>
+                <span class="s">&quot;or a template file&quot;</span><span class="p">)</span>
+
+    <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;Template: </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">template</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">arguments</span><span class="o">.</span><span class="n">local_procs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">max_procs</span> <span class="o">=</span> <span class="n">arguments</span><span class="o">.</span><span class="n">local_procs</span>
+
+    <span class="k">if</span> <span class="n">arguments</span><span class="o">.</span><span class="n">dry_run</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">dry_run</span> <span class="o">=</span> <span class="n">arguments</span><span class="o">.</span><span class="n">dry_run</span>
+
+    <span class="c"># Create a dictionary that will be shared amongst all forked processes.</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">data</span><span class="p">[</span><span class="s">&#39;dry_run&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dry_run</span>
+    <span class="n">data</span><span class="p">[</span><span class="s">&#39;start_directory&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
+    <span class="n">data</span><span class="p">[</span><span class="s">&#39;template&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">template</span>
+    <span class="n">data</span><span class="p">[</span><span class="s">&#39;template_file&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">arguments</span><span class="o">.</span><span class="n">template_file</span>
+    <span class="n">data</span><span class="p">[</span><span class="s">&#39;savecmd_file&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">arguments</span><span class="o">.</span><span class="n">savecmd_file</span>
+    <span class="n">data</span><span class="p">[</span><span class="s">&#39;log_file&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">arguments</span><span class="o">.</span><span class="n">log_file</span>
+    <span class="n">data</span><span class="p">[</span><span class="s">&#39;stop_on_error&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">arguments</span><span class="o">.</span><span class="n">stop_on_error</span>
+    <span class="n">data</span><span class="p">[</span><span class="s">&#39;summary_file&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">arguments</span><span class="o">.</span><span class="n">summary_file</span>
+
+    <span class="k">return</span> <span class="n">data</span><span class="p">,</span> <span class="n">max_procs</span><span class="p">,</span> <span class="n">arguments</span><span class="o">.</span><span class="n">json_files</span>
+</div>
+<div class="viewcode-block" id="main"><a class="viewcode-back" href="../../../nestly.scripts.html#nestly.scripts.nestrun.main">[docs]</a><span class="k">def</span> <span class="nf">main</span><span class="p">():</span>
+    <span class="n">data</span><span class="p">,</span> <span class="n">max_procs</span><span class="p">,</span> <span class="n">json_files</span> <span class="o">=</span> <span class="n">parse_arguments</span><span class="p">()</span>
+    <span class="n">invoke</span><span class="p">(</span><span class="n">max_procs</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">json_files</span><span class="p">)</span>
+</pre></div></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../../index.html">nestly v0.2 documentation</a> &raquo;</li>
+          <li><a href="../../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Erick Matsen et al..
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>

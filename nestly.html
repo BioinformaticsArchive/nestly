@@ -1,0 +1,236 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>nestly Package &mdash; nestly v0.2 documentation</title>
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="nestly v0.2 documentation" href="index.html" />
+    <link rel="up" title="Project Modules" href="modules.html" />
+    <link rel="next" title="Examples" href="examples.html" />
+    <link rel="prev" title="Project Modules" href="modules.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="examples.html" title="Examples"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="modules.html" title="Project Modules"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">nestly v0.2 documentation</a> &raquo;</li>
+          <li><a href="modules.html" accesskey="U">Project Modules</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">nestly Package</a><ul>
+<li><a class="reference internal" href="#id1"><tt class="docutils literal"><span class="pre">nestly</span></tt> Package</a></li>
+<li><a class="reference internal" href="#module-nestly.core"><tt class="docutils literal"><span class="pre">core</span></tt> Module</a></li>
+<li><a class="reference internal" href="#subpackages">Subpackages</a><ul>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="modules.html"
+                        title="previous chapter">Project Modules</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="examples.html"
+                        title="next chapter">Examples</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/nestly.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" size="18" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="nestly-package">
+<h1>nestly Package<a class="headerlink" href="#nestly-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="id1">
+<h2><tt class="xref py py-mod docutils literal"><span class="pre">nestly</span></tt> Package<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-nestly.__init__"></span><p>nestly is a collection of functions designed to make running software with
+combinatorial choices of parameters easier.</p>
+</div>
+<div class="section" id="module-nestly.core">
+<span id="core-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">core</span></tt> Module<a class="headerlink" href="#module-nestly.core" title="Permalink to this headline">¶</a></h2>
+<p>Core functions for building nests.</p>
+<dl class="class">
+<dt id="nestly.core.Nest">
+<em class="property">class </em><tt class="descclassname">nestly.core.</tt><tt class="descname">Nest</tt><big>(</big><em>control_name='control.json'</em>, <em>indent=2</em>, <em>fail_on_clash=False</em>, <em>warn_on_clash=True</em>, <em>base_dict=None</em><big>)</big><a class="reference internal" href="_modules/nestly/core.html#Nest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nestly.core.Nest" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Nests are used to build nested parameter selections, culminating in a
+directory structure representing choices made, and a JSON dictionary with
+all selections.</p>
+<p>Build parameter combinations with <a class="reference internal" href="#nestly.core.Nest.add" title="nestly.core.Nest.add"><tt class="xref py py-meth docutils literal"><span class="pre">Nest.add()</span></tt></a>, then create a nested
+directory structure with <a class="reference internal" href="#nestly.core.Nest.build" title="nestly.core.Nest.build"><tt class="xref py py-meth docutils literal"><span class="pre">Nest.build()</span></tt></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>control_name</strong> &#8211; Name JSON file to be created in each leaf</li>
+<li><strong>indent</strong> &#8211; Indentation level in json file</li>
+<li><strong>fail_on_clash</strong> &#8211; Error if a nest level attempts to overwrite a
+previous value</li>
+<li><strong>warn_on_clash</strong> &#8211; Print a warning if a nest level attempts ot overwrite
+a previous value</li>
+<li><strong>base_dict</strong> &#8211; Base dictionary to start all control dictionaries from
+(default: <tt class="docutils literal"><span class="pre">{}</span></tt>)</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="nestly.core.Nest.add">
+<tt class="descname">add</tt><big>(</big><em>name</em>, <em>nestable</em>, <em>create_dir=True</em>, <em>update=False</em>, <em>label_func=&lt;type 'str'&gt;</em><big>)</big><a class="reference internal" href="_modules/nestly/core.html#Nest.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nestly.core.Nest.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add a level to the nest</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>name</strong> (<em>string</em>) &#8211; Name of the level. Forms the key in the output
+dictionary.</li>
+<li><strong>nestable</strong> &#8211; Either an iterable object containing values, _or_ a
+function which takes a single argument (the control dictionary)
+and returns an iterable object containing values</li>
+<li><strong>create_dir</strong> (<em>boolean</em>) &#8211; Should a directory level be created for this
+nestable?</li>
+<li><strong>update</strong> (<em>boolean</em>) &#8211; Should the control dictionary be updated with
+the results of each value returned by the nestable? Only valid for
+dictionary results; useful for updating multiple values. At a
+minimum, a key-value pair corresponding to <tt class="docutils literal"><span class="pre">name</span></tt> must be
+returned.</li>
+<li><strong>label_func</strong> &#8211; Function to be called to convert each value to a
+directory label.</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="nestly.core.Nest.build">
+<tt class="descname">build</tt><big>(</big><em>root='runs'</em><big>)</big><a class="reference internal" href="_modules/nestly/core.html#Nest.build"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nestly.core.Nest.build" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build a nested directory structure, starting in <tt class="docutils literal"><span class="pre">root</span></tt></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><strong>root</strong> &#8211; Root directory for structure</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="nestly.core.Nest.iter">
+<tt class="descname">iter</tt><big>(</big><em>root=None</em><big>)</big><a class="reference internal" href="_modules/nestly/core.html#Nest.iter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nestly.core.Nest.iter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create an iterator of (directory, control_dict) tuples for all valid
+parameter choices in this <a class="reference internal" href="#nestly.core.Nest" title="nestly.core.Nest"><tt class="xref py py-class docutils literal"><span class="pre">Nest</span></tt></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><strong>root</strong> &#8211; Root directory</td>
+</tr>
+<tr class="field"><th class="field-name">Return type:</th><td class="field-body">Generator of <tt class="docutils literal"><span class="pre">(directory,</span> <span class="pre">control_dictionary)</span></tt> tuples.</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul class="simple">
+</ul>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="examples.html" title="Examples"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="modules.html" title="Project Modules"
+             >previous</a> |</li>
+        <li><a href="index.html">nestly v0.2 documentation</a> &raquo;</li>
+          <li><a href="modules.html" >Project Modules</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Erick Matsen et al..
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+    </div>
+  </body>
+</html>
