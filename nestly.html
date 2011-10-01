@@ -132,7 +132,7 @@ a previous value</li>
 </table>
 <dl class="method">
 <dt id="nestly.core.Nest.add">
-<tt class="descname">add</tt><big>(</big><em>name</em>, <em>nestable</em>, <em>create_dir=True</em>, <em>update=False</em>, <em>label_func=&lt;type 'str'&gt;</em><big>)</big><a class="reference internal" href="_modules/nestly/core.html#Nest.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nestly.core.Nest.add" title="Permalink to this definition">¶</a></dt>
+<tt class="descname">add</tt><big>(</big><em>name</em>, <em>nestable</em>, <em>create_dir=True</em>, <em>update=False</em>, <em>label_func=&lt;type 'str'&gt;</em>, <em>template_subs=False</em><big>)</big><a class="reference internal" href="_modules/nestly/core.html#Nest.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nestly.core.Nest.add" title="Permalink to this definition">¶</a></dt>
 <dd><p>Add a level to the nest</p>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
@@ -153,6 +153,9 @@ minimum, a key-value pair corresponding to <tt class="docutils literal"><span cl
 returned.</li>
 <li><strong>label_func</strong> &#8211; Function to be called to convert each value to a
 directory label.</li>
+<li><strong>template_subs</strong> (<em>boolean</em>) &#8211; Should the strings in / returned by
+nestable be treated as templates? If true, str.format is called
+with the current values of the control dictionary.</li>
 </ul>
 </td>
 </tr>
@@ -191,6 +194,38 @@ parameter choices in this <a class="reference internal" href="#nestly.core.Nest"
 </table>
 </dd></dl>
 
+<dl class="classmethod">
+<dt id="nestly.core.Nest.mirror">
+<em class="property">classmethod </em><tt class="descname">mirror</tt><big>(</big><em>directory</em>, <em>control_name='control.json'</em><big>)</big><a class="reference internal" href="_modules/nestly/core.html#Nest.mirror"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nestly.core.Nest.mirror" title="Permalink to this definition">¶</a></dt>
+<dd><p>Build a Nest from a directory already containing control.json files.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>directory</strong> (<em>string</em>) &#8211; Base Directory</li>
+<li><strong>control_name</strong> (<em>string</em>) &#8211; Name of json files in subdirectories</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="nestly.core.stripext">
+<tt class="descclassname">nestly.core.</tt><tt class="descname">stripext</tt><big>(</big><em>path</em><big>)</big><a class="reference internal" href="_modules/nestly/core.html#stripext"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nestly.core.stripext" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the basename, minus extension, of a path.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><strong>path</strong> (<em>string</em>) &#8211; Path to file</td>
+</tr>
+</tbody>
+</table>
 </dd></dl>
 
 </div>

@@ -69,11 +69,21 @@
 
 <span class="kn">import</span> <span class="nn">collections</span>
 <span class="kn">import</span> <span class="nn">errno</span>
+<span class="kn">import</span> <span class="nn">functools</span>
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">os.path</span>
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 
+<div class="viewcode-block" id="stripext"><a class="viewcode-back" href="../../nestly.html#nestly.core.stripext">[docs]</a><span class="k">def</span> <span class="nf">stripext</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Return the basename, minus extension, of a path.</span>
+
+<span class="sd">    :param string path: Path to file</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">path</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
+</div>
 <span class="k">def</span> <span class="nf">_mkdirs</span><span class="p">(</span><span class="n">d</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Make all directories up to d.</span>
@@ -105,6 +115,16 @@
         <span class="k">return</span> <span class="n">iterable</span>
     <span class="k">return</span> <span class="n">repeat_iter</span>
 
+<span class="k">def</span> <span class="nf">_templated</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Returns a function which applies ``str.format(**ctl)`` to all results of</span>
+<span class="sd">    ``fn(ctl)``.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nd">@functools.wraps</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">inner</span><span class="p">(</span><span class="n">ctl</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">i</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">**</span><span class="n">ctl</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">fn</span><span class="p">(</span><span class="n">ctl</span><span class="p">)]</span>
+    <span class="k">return</span> <span class="n">inner</span>
+
 <div class="viewcode-block" id="Nest"><a class="viewcode-back" href="../../nestly.html#nestly.core.Nest">[docs]</a><span class="k">class</span> <span class="nc">Nest</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Nests are used to build nested parameter selections, culminating in a</span>
@@ -130,7 +150,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">fail_on_clash</span> <span class="o">=</span> <span class="n">fail_on_clash</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">warn_on_clash</span> <span class="o">=</span> <span class="n">warn_on_clash</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_levels</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">base_dict</span> <span class="o">=</span> <span class="n">base_dict</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">base_dict</span> <span class="o">=</span> <span class="n">base_dict</span> <span class="ow">or</span> <span class="n">collections</span><span class="o">.</span><span class="n">OrderedDict</span><span class="p">()</span>
 
 <div class="viewcode-block" id="Nest.iter"><a class="viewcode-back" href="../../nestly.html#nestly.core.Nest.iter">[docs]</a>    <span class="k">def</span> <span class="nf">iter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -145,7 +165,7 @@
             <span class="k">if</span> <span class="ow">not</span> <span class="n">dirs</span><span class="p">:</span>
                 <span class="n">dirs</span> <span class="o">=</span> <span class="p">[]</span>
             <span class="k">if</span> <span class="n">nestables</span><span class="p">:</span>
-                <span class="c"># Still more nestables to consume...</span>
+                <span class="c"># Still more nestables to consume.</span>
                 <span class="n">n</span> <span class="o">=</span> <span class="n">nestables</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
 
                 <span class="n">result</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">nestable</span><span class="p">(</span><span class="n">control</span><span class="p">)</span>
@@ -197,7 +217,7 @@
                 <span class="n">fp</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
 </div>
 <div class="viewcode-block" id="Nest.add"><a class="viewcode-back" href="../../nestly.html#nestly.core.Nest.add">[docs]</a>    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">nestable</span><span class="p">,</span> <span class="n">create_dir</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">update</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
-            <span class="n">label_func</span><span class="o">=</span><span class="nb">str</span><span class="p">):</span>
+            <span class="n">label_func</span><span class="o">=</span><span class="nb">str</span><span class="p">,</span> <span class="n">template_subs</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Add a level to the nest</span>
 
@@ -215,6 +235,9 @@
 <span class="sd">            returned.</span>
 <span class="sd">        :param label_func: Function to be called to convert each value to a</span>
 <span class="sd">            directory label.</span>
+<span class="sd">        :param boolean template_subs: Should the strings in / returned by</span>
+<span class="sd">            nestable be treated as templates? If true, str.format is called</span>
+<span class="sd">            with the current values of the control dictionary.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="c"># Convert everything to functions</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">callable</span><span class="p">(</span><span class="n">nestable</span><span class="p">):</span>
@@ -225,8 +248,26 @@
                         <span class="s">&quot;Passed a string as an iterable for name {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
             <span class="n">old_nestable</span> <span class="o">=</span> <span class="n">nestable</span>
             <span class="n">nestable</span> <span class="o">=</span> <span class="n">_repeat_iter</span><span class="p">(</span><span class="n">old_nestable</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">template_subs</span><span class="p">:</span>
+            <span class="n">nestable</span> <span class="o">=</span> <span class="n">_templated</span><span class="p">(</span><span class="n">nestable</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_levels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_Nestable</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">nestable</span><span class="p">,</span> <span class="n">create_dir</span><span class="p">,</span> <span class="n">update</span><span class="p">,</span>
                                       <span class="n">label_func</span><span class="p">))</span>
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="Nest.mirror"><a class="viewcode-back" href="../../nestly.html#nestly.core.Nest.mirror">[docs]</a>    <span class="k">def</span> <span class="nf">mirror</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">directory</span><span class="p">,</span> <span class="n">control_name</span><span class="o">=</span><span class="s">&#39;control.json&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Build a Nest from a directory already containing control.json files.</span>
+
+<span class="sd">        :param string directory: Base Directory</span>
+<span class="sd">        :param string control_name: Name of json files in subdirectories</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">control_files</span> <span class="o">=</span> <span class="p">[(</span><span class="n">parent</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">parent</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">files</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span>
+                    <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files</span> <span class="k">if</span> <span class="n">f</span> <span class="o">==</span> <span class="n">control_name</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">control_file</span> <span class="ow">in</span> <span class="n">control_files</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">control_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">fp</span><span class="p">:</span>
+                <span class="n">control</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="n">object_hook</span><span class="o">=</span><span class="n">collections</span><span class="o">.</span><span class="n">OrderedDict</span><span class="p">)</span>
+                <span class="n">rev_control</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">control</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span> <span class="n">control</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
+                <span class="n">split_path</span> <span class="o">=</span> <span class="n">parent</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">directory</span><span class="p">):]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)</span>
 </pre></div></div></div>
 
           </div>
