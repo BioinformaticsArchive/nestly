@@ -1,0 +1,208 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Command line tools &mdash; nestly 0.2 documentation</title>
+    
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.2',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="nestly 0.2 documentation" href="index.html" />
+    <link rel="next" title="Project Modules" href="modules.html" />
+    <link rel="prev" title="scripts Package" href="nestly.scripts.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="modules.html" title="Project Modules"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="nestly.scripts.html" title="scripts Package"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">nestly 0.2 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Command line tools</a><ul>
+<li><a class="reference internal" href="#nestrun"><tt class="docutils literal"><span class="pre">nestrun</span></tt></a><ul>
+<li><a class="reference internal" href="#help">Help</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#nestagg"><tt class="docutils literal"><span class="pre">nestagg</span></tt></a><ul>
+<li><a class="reference internal" href="#id1">Help</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="nestly.scripts.html"
+                        title="previous chapter">scripts Package</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="modules.html"
+                        title="next chapter">Project Modules</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/command-line-tools.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="command-line-tools">
+<h1>Command line tools<a class="headerlink" href="#command-line-tools" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="nestrun">
+<h2><tt class="docutils literal"><span class="pre">nestrun</span></tt><a class="headerlink" href="#nestrun" title="Permalink to this headline">¶</a></h2>
+<p><tt class="docutils literal"><span class="pre">nestrun</span></tt> takes a command template and a list of control.json files with variables to
+substitute. Substitution is performed using the Python built-in
+<tt class="docutils literal"><span class="pre">str.format</span></tt> method. See the <a class="reference external" href="http://docs.python.org/library/string.html#formatstrings">Python Formatter documentation</a> for details on syntax,
+and <tt class="docutils literal"><span class="pre">examples/jsonrun/do_nestrun.sh</span></tt> for an example.</p>
+<div class="section" id="help">
+<h3>Help<a class="headerlink" href="#help" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><pre>usage: nestrun.py [-h] [-j N] [--template 'template text'] [--stop-on-error]
+                  [--template-file FILE] [--save-cmd-file SAVECMD_FILE]
+                  [--log-file LOG_FILE | --no-log] [--dry-run]
+                  [--summary-file SUMMARY_FILE]
+                  json_files [json_files ...]
+
+nestrun - substitute values into a template and run commands in parallel.
+
+positional arguments:
+  json_files            Nestly control dictionaries
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -j N, --processes N, --local N
+                        Run a maximum of N processes in parallel locally
+                        (default: 2)
+  --template 'template text'
+                        Command-execution template, e.g. bash {infile}. By
+                        default, nestrun executes the templatefile.
+  --stop-on-error       Terminate remaining processes if any process returns
+                        non-zero exit status (default: False)
+  --template-file FILE  Command-execution template file path.
+  --save-cmd-file SAVECMD_FILE
+                        Name of the file that will contain the command that
+                        was executed.
+  --log-file LOG_FILE   Name of the file that will contain output of the
+                        executed command.
+  --no-log              Don't create a log file
+  --dry-run             Dry run mode, does not execute commands.
+  --summary-file SUMMARY_FILE
+                        Write a summary of the run to the specified file</pre>
+</div>
+</div>
+</div>
+<div class="section" id="nestagg">
+<h2><tt class="docutils literal"><span class="pre">nestagg</span></tt><a class="headerlink" href="#nestagg" title="Permalink to this headline">¶</a></h2>
+<p>The <tt class="docutils literal"><span class="pre">nestagg</span></tt> command provides a mechanism for combining results of multiple
+runs.  Currently, the only supported action is merging delimited files from a
+set of leaves, adding values from the control dictionary on each.</p>
+<div class="section" id="id1">
+<h3>Help<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<div class="highlight-python"><pre>usage: nestagg.py delim [-h] [-k KEYS | -x EXCLUDE_KEYS] [-m {fail,warn}]
+                        [-s SEPARATOR] [-t] [-o OUTPUT]
+                        file_template control.json [control.json ...]
+
+positional arguments:
+  file_template         Template for the delimited file to read in each
+                        directory [e.g. '{run_id}.csv']
+  control.json          Control files
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -k KEYS, --keys KEYS  Comma separated list of keys from the JSON file to
+                        include [default: all keys]
+  -x EXCLUDE_KEYS, --exclude-keys EXCLUDE_KEYS
+                        Comma separated list of keys from the JSON file not to
+                        include [default: None]
+  -m {fail,warn}, --missing-action {fail,warn}
+                        Action to take when a file is missing [default: fail]
+  -s SEPARATOR, --separator SEPARATOR
+                        Separator [default: ,]
+  -t, --tab             Files are tab-separated
+  -o OUTPUT, --output OUTPUT
+                        Output file [default: stdout]</pre>
+</div>
+</div>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="modules.html" title="Project Modules"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="nestly.scripts.html" title="scripts Package"
+             >previous</a> |</li>
+        <li><a href="index.html">nestly 0.2 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Erick Matsen et al..
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>

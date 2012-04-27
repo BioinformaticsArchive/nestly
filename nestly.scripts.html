@@ -3,13 +3,16 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
+
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>scripts Package &mdash; nestly v0.2 documentation</title>
+    <title>scripts Package &mdash; nestly 0.2 documentation</title>
+    
     <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
@@ -22,7 +25,10 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="nestly v0.2 documentation" href="index.html" /> 
+    <link rel="top" title="nestly 0.2 documentation" href="index.html" />
+    <link rel="up" title="nestly Package" href="nestly.html" />
+    <link rel="next" title="Examples" href="examples.html" />
+    <link rel="prev" title="nestly Package" href="nestly.html" /> 
   </head>
   <body>
     <div class="related">
@@ -34,7 +40,15 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="index.html">nestly v0.2 documentation</a> &raquo;</li> 
+        <li class="right" >
+          <a href="examples.html" title="Examples"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="nestly.html" title="nestly Package"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">nestly 0.2 documentation</a> &raquo;</li>
+          <li><a href="modules.html" >Project Modules</a> &raquo;</li>
+          <li><a href="nestly.html" accesskey="U">nestly Package</a> &raquo;</li> 
       </ul>
     </div>
       <div class="sphinxsidebar">
@@ -43,10 +57,17 @@
   <ul>
 <li><a class="reference internal" href="#">scripts Package</a><ul>
 <li><a class="reference internal" href="#module-nestly.scripts.nestrun"><tt class="docutils literal"><span class="pre">nestrun</span></tt> Module</a></li>
+<li><a class="reference internal" href="#module-nestly.scripts.nestagg"><tt class="docutils literal"><span class="pre">nestagg</span></tt> Module</a></li>
 </ul>
 </li>
 </ul>
 
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="nestly.html"
+                        title="previous chapter">nestly Package</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="examples.html"
+                        title="next chapter">Examples</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/nestly.scripts.txt"
@@ -55,7 +76,7 @@
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" size="18" />
+      <input type="text" name="q" />
       <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
@@ -86,7 +107,14 @@
 <dl class="method">
 <dt id="nestly.scripts.nestrun.NestlyProcess.complete">
 <tt class="descname">complete</tt><big>(</big><em>return_code</em><big>)</big><a class="reference internal" href="_modules/nestly/scripts/nestrun.html#NestlyProcess.complete"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nestly.scripts.nestrun.NestlyProcess.complete" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
+<dd><p>Mark the process as complete with provided return_code</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nestly.scripts.nestrun.NestlyProcess.log_tail">
+<tt class="descname">log_tail</tt><big>(</big><em>nlines=10</em><big>)</big><a class="reference internal" href="_modules/nestly/scripts/nestrun.html#NestlyProcess.log_tail"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nestly.scripts.nestrun.NestlyProcess.log_tail" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the last <tt class="docutils literal"><span class="pre">nlines</span></tt> lines of the log file</p>
+</dd></dl>
 
 <dl class="attribute">
 <dt id="nestly.scripts.nestrun.NestlyProcess.running_time">
@@ -143,6 +171,40 @@ format.</p>
 </dd></dl>
 
 </div>
+<div class="section" id="module-nestly.scripts.nestagg">
+<span id="nestagg-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">nestagg</span></tt> Module<a class="headerlink" href="#module-nestly.scripts.nestagg" title="Permalink to this headline">¶</a></h2>
+<p>Aggregate results of <tt class="docutils literal"><span class="pre">nestly</span></tt> runs.</p>
+<dl class="function">
+<dt id="nestly.scripts.nestagg.comma_separated_values">
+<tt class="descclassname">nestly.scripts.nestagg.</tt><tt class="descname">comma_separated_values</tt><big>(</big><em>s</em><big>)</big><a class="reference internal" href="_modules/nestly/scripts/nestagg.html#comma_separated_values"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nestly.scripts.nestagg.comma_separated_values" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="nestly.scripts.nestagg.delim">
+<tt class="descclassname">nestly.scripts.nestagg.</tt><tt class="descname">delim</tt><big>(</big><em>arguments</em><big>)</big><a class="reference internal" href="_modules/nestly/scripts/nestagg.html#delim"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nestly.scripts.nestagg.delim" title="Permalink to this definition">¶</a></dt>
+<dd><p>Execute delim action.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>arguments</strong> &#8211; Parsed command line arguments from <a class="reference internal" href="#nestly.scripts.nestagg.main" title="nestly.scripts.nestagg.main"><tt class="xref py py-func docutils literal"><span class="pre">main()</span></tt></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="nestly.scripts.nestagg.main">
+<tt class="descclassname">nestly.scripts.nestagg.</tt><tt class="descname">main</tt><big>(</big><em>args=['-b', 'html', '-d', '_build/doctrees', '.', '_build/html']</em><big>)</big><a class="reference internal" href="_modules/nestly/scripts/nestagg.html#main"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nestly.scripts.nestagg.main" title="Permalink to this definition">¶</a></dt>
+<dd><p>Command-line interface for nestagg</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="nestly.scripts.nestagg.warn">
+<tt class="descclassname">nestly.scripts.nestagg.</tt><tt class="descname">warn</tt><big>(</big><em>message</em><big>)</big><a class="reference internal" href="_modules/nestly/scripts/nestagg.html#warn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nestly.scripts.nestagg.warn" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
 </div>
 
 
@@ -160,12 +222,20 @@ format.</p>
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="index.html">nestly v0.2 documentation</a> &raquo;</li> 
+        <li class="right" >
+          <a href="examples.html" title="Examples"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="nestly.html" title="nestly Package"
+             >previous</a> |</li>
+        <li><a href="index.html">nestly 0.2 documentation</a> &raquo;</li>
+          <li><a href="modules.html" >Project Modules</a> &raquo;</li>
+          <li><a href="nestly.html" >nestly Package</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
         &copy; Copyright 2011, Erick Matsen et al..
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
     </div>
   </body>
 </html>

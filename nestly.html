@@ -3,13 +3,16 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
+
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>nestly Package &mdash; nestly v0.2 documentation</title>
+    <title>nestly Package &mdash; nestly 0.2 documentation</title>
+    
     <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
@@ -22,9 +25,9 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="nestly v0.2 documentation" href="index.html" />
+    <link rel="top" title="nestly 0.2 documentation" href="index.html" />
     <link rel="up" title="Project Modules" href="modules.html" />
-    <link rel="next" title="Examples" href="examples.html" />
+    <link rel="next" title="scripts Package" href="nestly.scripts.html" />
     <link rel="prev" title="Project Modules" href="modules.html" /> 
   </head>
   <body>
@@ -38,12 +41,12 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="examples.html" title="Examples"
+          <a href="nestly.scripts.html" title="scripts Package"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="modules.html" title="Project Modules"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">nestly v0.2 documentation</a> &raquo;</li>
+        <li><a href="index.html">nestly 0.2 documentation</a> &raquo;</li>
           <li><a href="modules.html" accesskey="U">Project Modules</a> &raquo;</li> 
       </ul>
     </div>
@@ -65,8 +68,8 @@
   <p class="topless"><a href="modules.html"
                         title="previous chapter">Project Modules</a></p>
   <h4>Next topic</h4>
-  <p class="topless"><a href="examples.html"
-                        title="next chapter">Examples</a></p>
+  <p class="topless"><a href="nestly.scripts.html"
+                        title="next chapter">scripts Package</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/nestly.txt"
@@ -75,7 +78,7 @@
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="search.html" method="get">
-      <input type="text" name="q" size="18" />
+      <input type="text" name="q" />
       <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
@@ -116,7 +119,7 @@ directory structure with <a class="reference internal" href="#nestly.core.Nest.b
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>control_name</strong> &#8211; Name JSON file to be created in each leaf</li>
 <li><strong>indent</strong> &#8211; Indentation level in json file</li>
 <li><strong>fail_on_clash</strong> &#8211; Error if a nest level attempts to overwrite a
@@ -138,7 +141,7 @@ a previous value</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
 <li><strong>name</strong> (<em>string</em>) &#8211; Name of the level. Forms the key in the output
 dictionary.</li>
 <li><strong>nestable</strong> &#8211; Either an iterable object containing values, _or_ a
@@ -171,7 +174,7 @@ with the current values of the control dictionary.</li>
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><strong>root</strong> &#8211; Root directory for structure</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>root</strong> &#8211; Root directory for structure</td>
 </tr>
 </tbody>
 </table>
@@ -186,32 +189,52 @@ parameter choices in this <a class="reference internal" href="#nestly.core.Nest"
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><strong>root</strong> &#8211; Root directory</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>root</strong> &#8211; Root directory</td>
 </tr>
-<tr class="field"><th class="field-name">Return type:</th><td class="field-body">Generator of <tt class="docutils literal"><span class="pre">(directory,</span> <span class="pre">control_dictionary)</span></tt> tuples.</td>
+<tr class="field-even field"><th class="field-name">Return type:</th><td class="field-body">Generator of <tt class="docutils literal"><span class="pre">(directory,</span> <span class="pre">control_dictionary)</span></tt> tuples.</td>
 </tr>
 </tbody>
 </table>
 </dd></dl>
 
-<dl class="classmethod">
-<dt id="nestly.core.Nest.mirror">
-<em class="property">classmethod </em><tt class="descname">mirror</tt><big>(</big><em>directory</em>, <em>control_name='control.json'</em><big>)</big><a class="reference internal" href="_modules/nestly/core.html#Nest.mirror"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nestly.core.Nest.mirror" title="Permalink to this definition">¶</a></dt>
-<dd><p>Build a Nest from a directory already containing control.json files.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="nestly.core.control_iter">
+<tt class="descclassname">nestly.core.</tt><tt class="descname">control_iter</tt><big>(</big><em>base_dir</em>, <em>control_name='control.json'</em><big>)</big><a class="reference internal" href="_modules/nestly/core.html#control_iter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nestly.core.control_iter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Generate the names of all control files under base_dir</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="nestly.core.nest_map">
+<tt class="descclassname">nestly.core.</tt><tt class="descname">nest_map</tt><big>(</big><em>control_iter</em>, <em>map_fn</em><big>)</big><a class="reference internal" href="_modules/nestly/core.html#nest_map"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nestly.core.nest_map" title="Permalink to this definition">¶</a></dt>
+<dd><p>Apply <tt class="docutils literal"><span class="pre">map_fn</span></tt> to the directories defined by <tt class="docutils literal"><span class="pre">control_iter</span></tt></p>
+<p>For each control file in control_iter, map_fn is called with the directory
+and control file contents as arguments.</p>
+<p>Example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="nb">list</span><span class="p">(</span><span class="n">nest_map</span><span class="p">([</span><span class="s">&#39;run1/control.json&#39;</span><span class="p">,</span> <span class="s">&#39;run2/control.json&#39;</span><span class="p">],</span>
+<span class="gp">... </span>              <span class="k">lambda</span> <span class="n">d</span><span class="p">,</span> <span class="n">c</span><span class="p">:</span> <span class="n">c</span><span class="p">[</span><span class="s">&#39;run_id&#39;</span><span class="p">]))</span>
+<span class="go">[1, 2]</span>
+</pre></div>
+</div>
 <table class="docutils field-list" frame="void" rules="none">
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
-<li><strong>directory</strong> (<em>string</em>) &#8211; Base Directory</li>
-<li><strong>control_name</strong> (<em>string</em>) &#8211; Name of json files in subdirectories</li>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first simple">
+<li><strong>control_iter</strong> &#8211; Iterable of paths to JSON control files</li>
+<li><strong>map_fn</strong> (<em>function</em>) &#8211; Function to run for each control file. It should
+accept two arguments: the directory of the control file and the
+json-decoded contents of the control file.</li>
 </ul>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">A generator of the results of applying <tt class="docutils literal"><span class="pre">map_fn</span></tt> to elements in
+<tt class="docutils literal"><span class="pre">control_iter</span></tt></p>
 </td>
 </tr>
 </tbody>
 </table>
-</dd></dl>
-
 </dd></dl>
 
 <dl class="function">
@@ -222,7 +245,7 @@ parameter choices in this <a class="reference internal" href="#nestly.core.Nest"
 <col class="field-name" />
 <col class="field-body" />
 <tbody valign="top">
-<tr class="field"><th class="field-name">Parameters:</th><td class="field-body"><strong>path</strong> (<em>string</em>) &#8211; Path to file</td>
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>path</strong> (<em>string</em>) &#8211; Path to file</td>
 </tr>
 </tbody>
 </table>
@@ -232,7 +255,12 @@ parameter choices in this <a class="reference internal" href="#nestly.core.Nest"
 <div class="section" id="subpackages">
 <h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
 <div class="toctree-wrapper compound">
-<ul class="simple">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="nestly.scripts.html">scripts Package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="nestly.scripts.html#module-nestly.scripts.nestrun"><tt class="docutils literal"><span class="pre">nestrun</span></tt> Module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="nestly.scripts.html#module-nestly.scripts.nestagg"><tt class="docutils literal"><span class="pre">nestagg</span></tt> Module</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </div>
@@ -254,18 +282,18 @@ parameter choices in this <a class="reference internal" href="#nestly.core.Nest"
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="examples.html" title="Examples"
+          <a href="nestly.scripts.html" title="scripts Package"
              >next</a> |</li>
         <li class="right" >
           <a href="modules.html" title="Project Modules"
              >previous</a> |</li>
-        <li><a href="index.html">nestly v0.2 documentation</a> &raquo;</li>
+        <li><a href="index.html">nestly 0.2 documentation</a> &raquo;</li>
           <li><a href="modules.html" >Project Modules</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
         &copy; Copyright 2011, Erick Matsen et al..
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
     </div>
   </body>
 </html>

@@ -3,13 +3,16 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
+
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>nestly.core &mdash; nestly v0.2 documentation</title>
+    <title>nestly.core &mdash; nestly 0.2 documentation</title>
+    
     <link rel="stylesheet" href="../../_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../',
@@ -22,7 +25,7 @@
     <script type="text/javascript" src="../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../_static/doctools.js"></script>
-    <link rel="top" title="nestly v0.2 documentation" href="../../index.html" />
+    <link rel="top" title="nestly 0.2 documentation" href="../../index.html" />
     <link rel="up" title="Module code" href="../index.html" /> 
   </head>
   <body>
@@ -35,7 +38,7 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../index.html">nestly v0.2 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">nestly 0.2 documentation</a> &raquo;</li>
           <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>
@@ -44,7 +47,7 @@
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="../../search.html" method="get">
-      <input type="text" name="q" size="18" />
+      <input type="text" name="q" />
       <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
@@ -70,11 +73,18 @@
 <span class="kn">import</span> <span class="nn">collections</span>
 <span class="kn">import</span> <span class="nn">errno</span>
 <span class="kn">import</span> <span class="nn">functools</span>
+<span class="kn">import</span> <span class="nn">itertools</span>
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">os.path</span>
 <span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="n">CONTROL_NAME</span> <span class="o">=</span> <span class="s">&#39;control.json&#39;</span>
+
+<span class="c"># Load a JSON file into an ordered dict</span>
+<span class="n">ordered_load</span> <span class="o">=</span> <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">,</span>
+        <span class="n">object_pairs_hook</span><span class="o">=</span><span class="n">collections</span><span class="o">.</span><span class="n">OrderedDict</span><span class="p">)</span>
 
 <div class="viewcode-block" id="stripext"><a class="viewcode-back" href="../../nestly.html#nestly.core.stripext">[docs]</a><span class="k">def</span> <span class="nf">stripext</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
@@ -102,7 +112,7 @@
 
 <span class="k">def</span> <span class="nf">_is_iter</span><span class="p">(</span><span class="n">iterable</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Returns whether an item is iterable or not</span>
+<span class="sd">    Return whether an item is iterable or not</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="nb">iter</span><span class="p">(</span><span class="n">iterable</span><span class="p">)</span>
@@ -117,7 +127,7 @@
 
 <span class="k">def</span> <span class="nf">_templated</span><span class="p">(</span><span class="n">fn</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    Returns a function which applies ``str.format(**ctl)`` to all results of</span>
+<span class="sd">    Return a function which applies ``str.format(**ctl)`` to all results of</span>
 <span class="sd">    ``fn(ctl)``.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="nd">@functools.wraps</span><span class="p">(</span><span class="n">fn</span><span class="p">)</span>
@@ -143,7 +153,7 @@
 <span class="sd">    :param base_dict: Base dictionary to start all control dictionaries from</span>
 <span class="sd">        (default: ``{}``)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">control_name</span><span class="o">=</span><span class="s">&quot;control.json&quot;</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">control_name</span><span class="o">=</span><span class="n">CONTROL_NAME</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
             <span class="n">fail_on_clash</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">warn_on_clash</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">base_dict</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">control_name</span> <span class="o">=</span> <span class="n">control_name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">indent</span> <span class="o">=</span> <span class="n">indent</span>
@@ -202,6 +212,12 @@
 
         <span class="k">return</span> <span class="n">inner</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_dict</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_levels</span><span class="p">[:])</span>
 </div>
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Iterate over directory, control pairs. Same as :meth:`Nest.iter`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">iter</span><span class="p">()</span>
+
 <div class="viewcode-block" id="Nest.build"><a class="viewcode-back" href="../../nestly.html#nestly.core.Nest.build">[docs]</a>    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="s">&quot;runs&quot;</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Build a nested directory structure, starting in ``root``</span>
@@ -252,23 +268,47 @@
             <span class="n">nestable</span> <span class="o">=</span> <span class="n">_templated</span><span class="p">(</span><span class="n">nestable</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_levels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_Nestable</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">nestable</span><span class="p">,</span> <span class="n">create_dir</span><span class="p">,</span> <span class="n">update</span><span class="p">,</span>
                                       <span class="n">label_func</span><span class="p">))</span>
-</div>
-    <span class="nd">@classmethod</span>
-<div class="viewcode-block" id="Nest.mirror"><a class="viewcode-back" href="../../nestly.html#nestly.core.Nest.mirror">[docs]</a>    <span class="k">def</span> <span class="nf">mirror</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">directory</span><span class="p">,</span> <span class="n">control_name</span><span class="o">=</span><span class="s">&#39;control.json&#39;</span><span class="p">):</span>
-        <span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Build a Nest from a directory already containing control.json files.</span>
+</div></div>
+<div class="viewcode-block" id="nest_map"><a class="viewcode-back" href="../../nestly.html#nestly.core.nest_map">[docs]</a><span class="k">def</span> <span class="nf">nest_map</span><span class="p">(</span><span class="n">control_iter</span><span class="p">,</span> <span class="n">map_fn</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Apply ``map_fn`` to the directories defined by ``control_iter``</span>
 
-<span class="sd">        :param string directory: Base Directory</span>
-<span class="sd">        :param string control_name: Name of json files in subdirectories</span>
+<span class="sd">    For each control file in control_iter, map_fn is called with the directory</span>
+<span class="sd">    and control file contents as arguments.</span>
+
+<span class="sd">    Example::</span>
+
+<span class="sd">        &gt;&gt;&gt; list(nest_map([&#39;run1/control.json&#39;, &#39;run2/control.json&#39;],</span>
+<span class="sd">        ...               lambda d, c: c[&#39;run_id&#39;]))</span>
+<span class="sd">        [1, 2]</span>
+
+<span class="sd">    :param control_iter: Iterable of paths to JSON control files</span>
+<span class="sd">    :param function map_fn: Function to run for each control file. It should</span>
+<span class="sd">            accept two arguments: the directory of the control file and the</span>
+<span class="sd">            json-decoded contents of the control file.</span>
+<span class="sd">    :returns: A generator of the results of applying ``map_fn`` to elements in</span>
+<span class="sd">            ``control_iter``</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">fn</span><span class="p">(</span><span class="n">control_path</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Read the control file, return the result of calling map_fn</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">control_files</span> <span class="o">=</span> <span class="p">[(</span><span class="n">parent</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">parent</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">files</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">directory</span><span class="p">)</span>
-                    <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">files</span> <span class="k">if</span> <span class="n">f</span> <span class="o">==</span> <span class="n">control_name</span><span class="p">]</span>
-        <span class="k">for</span> <span class="n">control_file</span> <span class="ow">in</span> <span class="n">control_files</span><span class="p">:</span>
-            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">control_file</span><span class="p">)</span> <span class="k">as</span> <span class="n">fp</span><span class="p">:</span>
-                <span class="n">control</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">fp</span><span class="p">,</span> <span class="n">object_hook</span><span class="o">=</span><span class="n">collections</span><span class="o">.</span><span class="n">OrderedDict</span><span class="p">)</span>
-                <span class="n">rev_control</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">control</span><span class="o">.</span><span class="n">values</span><span class="p">(),</span> <span class="n">control</span><span class="o">.</span><span class="n">keys</span><span class="p">()))</span>
-                <span class="n">split_path</span> <span class="o">=</span> <span class="n">parent</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">directory</span><span class="p">):]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;/&#39;</span><span class="p">)</span>
-</pre></div></div></div>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">control_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">fp</span><span class="p">:</span>
+            <span class="n">control</span> <span class="o">=</span> <span class="n">ordered_load</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
+        <span class="n">dn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">control_path</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">map_fn</span><span class="p">(</span><span class="n">dn</span><span class="p">,</span> <span class="n">control</span><span class="p">)</span>
+
+    <span class="n">mapped</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">imap</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">control_iter</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">mapped</span>
+</div>
+<div class="viewcode-block" id="control_iter"><a class="viewcode-back" href="../../nestly.html#nestly.core.control_iter">[docs]</a><span class="k">def</span> <span class="nf">control_iter</span><span class="p">(</span><span class="n">base_dir</span><span class="p">,</span> <span class="n">control_name</span><span class="o">=</span><span class="n">CONTROL_NAME</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Generate the names of all control files under base_dir</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">controls</span> <span class="o">=</span> <span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">control_name</span><span class="p">)</span> <span class="k">for</span> <span class="n">p</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">fs</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="n">base_dir</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">control_name</span> <span class="ow">in</span> <span class="n">fs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">controls</span></div>
+</pre></div>
 
           </div>
         </div>
@@ -284,13 +324,13 @@
         <li class="right" >
           <a href="../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../index.html">nestly v0.2 documentation</a> &raquo;</li>
+        <li><a href="../../index.html">nestly 0.2 documentation</a> &raquo;</li>
           <li><a href="../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
         &copy; Copyright 2011, Erick Matsen et al..
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
     </div>
   </body>
 </html>

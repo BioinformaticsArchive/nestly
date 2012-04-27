@@ -3,13 +3,16 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 
+
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>nestly.scripts.nestrun &mdash; nestly v0.2 documentation</title>
+    <title>nestly.scripts.nestrun &mdash; nestly 0.2 documentation</title>
+    
     <link rel="stylesheet" href="../../../_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '../../../',
@@ -22,7 +25,7 @@
     <script type="text/javascript" src="../../../_static/jquery.js"></script>
     <script type="text/javascript" src="../../../_static/underscore.js"></script>
     <script type="text/javascript" src="../../../_static/doctools.js"></script>
-    <link rel="top" title="nestly v0.2 documentation" href="../../../index.html" />
+    <link rel="top" title="nestly 0.2 documentation" href="../../../index.html" />
     <link rel="up" title="Module code" href="../../index.html" /> 
   </head>
   <body>
@@ -35,7 +38,7 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">nestly v0.2 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">nestly 0.2 documentation</a> &raquo;</li>
           <li><a href="../../index.html" accesskey="U">Module code</a> &raquo;</li> 
       </ul>
     </div>
@@ -44,7 +47,7 @@
 <div id="searchbox" style="display: none">
   <h3>Quick search</h3>
     <form class="search" action="../../../search.html" method="get">
-      <input type="text" name="q" size="18" />
+      <input type="text" name="q" />
       <input type="submit" value="Go" />
       <input type="hidden" name="check_keywords" value="yes" />
       <input type="hidden" name="area" value="default" />
@@ -67,6 +70,7 @@
 <span class="sd">nestrun.py - run commands based on control dictionaries.</span>
 <span class="sd">&quot;&quot;&quot;</span>
 <span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">import</span> <span class="nn">collections</span>
 <span class="kn">import</span> <span class="nn">csv</span>
 <span class="kn">import</span> <span class="nn">datetime</span>
 <span class="kn">import</span> <span class="nn">json</span>
@@ -141,8 +145,8 @@
         <span class="c"># Check exit status, cancel jobs if stop_on_error specified and</span>
         <span class="c"># non-zero</span>
         <span class="k">if</span> <span class="n">exit_status</span><span class="p">:</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&#39;[</span><span class="si">%s</span><span class="s">] </span><span class="si">%s</span><span class="s"> Finished with non-zero exit status </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span>
-                    <span class="n">pid</span><span class="p">,</span> <span class="n">proc</span><span class="o">.</span><span class="n">working_dir</span><span class="p">,</span> <span class="n">exit_status</span><span class="p">)</span>
+            <span class="n">logging</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&#39;[</span><span class="si">%s</span><span class="s">] </span><span class="si">%s</span><span class="s"> Finished with non-zero exit status </span><span class="si">%s</span><span class="se">\n</span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span>
+                    <span class="n">pid</span><span class="p">,</span> <span class="n">proc</span><span class="o">.</span><span class="n">working_dir</span><span class="p">,</span> <span class="n">exit_status</span><span class="p">,</span> <span class="n">proc</span><span class="o">.</span><span class="n">log_tail</span><span class="p">())</span>
             <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;stop_on_error&#39;</span><span class="p">]:</span>
                 <span class="n">_terminate_procs</span><span class="p">(</span><span class="n">running_procs</span><span class="p">)</span>
                 <span class="k">break</span>
@@ -200,6 +204,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s">&#39;TERMINATED&#39;</span>
 </div>
 <div class="viewcode-block" id="NestlyProcess.complete"><a class="viewcode-back" href="../../../nestly.scripts.html#nestly.scripts.nestrun.NestlyProcess.complete">[docs]</a>    <span class="k">def</span> <span class="nf">complete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">return_code</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Mark the process as complete with provided return_code</span>
+<span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">return_code</span> <span class="o">=</span> <span class="n">return_code</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">status</span> <span class="o">=</span> <span class="s">&#39;COMPLETE&#39;</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">return_code</span> <span class="k">else</span> <span class="s">&#39;FAILED&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">end_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
@@ -210,6 +217,16 @@
             <span class="k">return</span> <span class="bp">None</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">end_time</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_time</span>
+</div>
+<div class="viewcode-block" id="NestlyProcess.log_tail"><a class="viewcode-back" href="../../../nestly.scripts.html#nestly.scripts.nestrun.NestlyProcess.log_tail">[docs]</a>    <span class="k">def</span> <span class="nf">log_tail</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nlines</span><span class="o">=</span><span class="mi">10</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Return the last ``nlines`` lines of the log file</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">log_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">working_dir</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">log_name</span><span class="p">)</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">log_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">fp</span><span class="p">:</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">deque</span><span class="p">(</span><span class="n">maxlen</span><span class="o">=</span><span class="n">nlines</span><span class="p">)</span>
+            <span class="n">d</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">fp</span><span class="p">)</span>
+            <span class="k">return</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
 
 </div></div>
 <div class="viewcode-block" id="worker"><a class="viewcode-back" href="../../../nestly.scripts.html#nestly.scripts.nestrun.worker">[docs]</a><span class="k">def</span> <span class="nf">worker</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">json_file</span><span class="p">):</span>
@@ -242,8 +259,9 @@
             <span class="n">shutil</span><span class="o">.</span><span class="n">copymode</span><span class="p">(</span><span class="n">template_file</span><span class="p">,</span> <span class="n">output_template</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">OSError</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
             <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">errno</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&quot;Couldn&#39;t copy permissions to </span><span class="si">%s</span><span class="s">: </span><span class="si">%s</span><span class="s">&quot;</span><span class="p">,</span>
-                        <span class="n">output_template</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&quot;Couldn&#39;t set permissions on </span><span class="si">%s</span><span class="s">. &quot;</span>
+                        <span class="s">&quot;Continuing with existing permissions&quot;</span><span class="p">,</span>
+                        <span class="n">output_template</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span>
 
@@ -381,13 +399,13 @@
         <li class="right" >
           <a href="../../../py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
-        <li><a href="../../../index.html">nestly v0.2 documentation</a> &raquo;</li>
+        <li><a href="../../../index.html">nestly 0.2 documentation</a> &raquo;</li>
           <li><a href="../../index.html" >Module code</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
         &copy; Copyright 2011, Erick Matsen et al..
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.0.7.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
     </div>
   </body>
 </html>
