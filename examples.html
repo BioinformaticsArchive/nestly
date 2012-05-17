@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>Examples &mdash; nestly 0.2 documentation</title>
+    <title>Examples &mdash; nestly 0.3 documentation</title>
     
     <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -16,7 +16,7 @@
     <script type="text/javascript">
       var DOCUMENTATION_OPTIONS = {
         URL_ROOT:    '',
-        VERSION:     '0.2',
+        VERSION:     '0.3',
         COLLAPSE_INDEX: false,
         FILE_SUFFIX: '.html',
         HAS_SOURCE:  true
@@ -25,7 +25,7 @@
     <script type="text/javascript" src="_static/jquery.js"></script>
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
-    <link rel="top" title="nestly 0.2 documentation" href="index.html" />
+    <link rel="top" title="nestly 0.3 documentation" href="index.html" />
     <link rel="prev" title="scripts Package" href="nestly.scripts.html" /> 
   </head>
   <body>
@@ -41,7 +41,7 @@
         <li class="right" >
           <a href="nestly.scripts.html" title="scripts Package"
              accesskey="P">previous</a> |</li>
-        <li><a href="index.html">nestly 0.2 documentation</a> &raquo;</li> 
+        <li><a href="index.html">nestly 0.3 documentation</a> &raquo;</li> 
       </ul>
     </div>
       <div class="sphinxsidebar">
@@ -210,16 +210,13 @@ control dictionary:</p>
 37
 38
 39
-40
-41
-42
-43</pre></div></td><td class="code"><div class="highlight"><pre><span class="c">#!/usr/bin/env python</span>
+40</pre></div></td><td class="code"><div class="highlight"><pre><span class="c">#!/usr/bin/env python</span>
 
 <span class="kn">import</span> <span class="nn">glob</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">os.path</span>
 
-<span class="kn">from</span> <span class="nn">nestly</span> <span class="kn">import</span> <span class="n">Nest</span>
+<span class="kn">from</span> <span class="nn">nestly</span> <span class="kn">import</span> <span class="n">Nest</span><span class="p">,</span> <span class="n">stripext</span>
 
 <span class="n">wd</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
 <span class="n">startersdir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">wd</span><span class="p">,</span> <span class="s">&quot;starters&quot;</span><span class="p">)</span>
@@ -229,9 +226,6 @@ control dictionary:</p>
 <span class="n">nest</span> <span class="o">=</span> <span class="n">Nest</span><span class="p">()</span>
 
 <span class="n">bn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span>
-<span class="k">def</span> <span class="nf">strip_bn</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
-    <span class="sd">&quot;&quot;&quot;Return the basename of path, any extension stripped&quot;&quot;&quot;</span>
-    <span class="k">return</span> <span class="n">bn</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">path</span><span class="p">)[</span><span class="mi">0</span><span class="p">])</span>
 
 <span class="c"># start by mirroring the two directory levels in startersdir, and name those</span>
 <span class="c"># directories &quot;ethnicity&quot; and &quot;dietary&quot;</span>
@@ -242,17 +236,17 @@ control dictionary:</p>
 
 <span class="c">## now get all of the starters</span>
 <span class="n">nest</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;starter&#39;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="s">&#39;dietary&#39;</span><span class="p">],</span> <span class="s">&#39;*&#39;</span><span class="p">)),</span>
-    <span class="n">label_func</span><span class="o">=</span><span class="n">strip_bn</span><span class="p">)</span>
+    <span class="n">label_func</span><span class="o">=</span><span class="n">stripext</span><span class="p">)</span>
 <span class="c">## now get the corresponding mains</span>
 <span class="n">nest</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;main&#39;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">mainsdir</span><span class="p">,</span> <span class="n">bn</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="s">&#39;ethnicity&#39;</span><span class="p">])</span> <span class="o">+</span> <span class="s">&quot;_stirfry.txt&quot;</span><span class="p">)],</span>
-    <span class="n">label_func</span><span class="o">=</span><span class="n">strip_bn</span><span class="p">)</span>
+    <span class="n">label_func</span><span class="o">=</span><span class="n">stripext</span><span class="p">)</span>
 
 <span class="c">## get only the tasty wines</span>
 <span class="n">nest</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;wine&#39;</span><span class="p">,</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">winedir</span><span class="p">,</span> <span class="s">&#39;*.tasty&#39;</span><span class="p">)),</span>
-    <span class="n">label_func</span><span class="o">=</span><span class="n">strip_bn</span><span class="p">)</span>
+    <span class="n">label_func</span><span class="o">=</span><span class="n">stripext</span><span class="p">)</span>
 <span class="c">## the wineglasses should be chosen by the wine choice, but we don&#39;t want to</span>
 <span class="c">## make a directory for those.</span>
-<span class="n">nest</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;wineglass&#39;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="p">[</span><span class="n">strip_bn</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="s">&#39;wine&#39;</span><span class="p">])</span> <span class="o">+</span> <span class="s">&#39; wine glasses&#39;</span><span class="p">],</span>
+<span class="n">nest</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;wineglass&#39;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="p">[</span><span class="n">stripext</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="s">&#39;wine&#39;</span><span class="p">])</span> <span class="o">+</span> <span class="s">&#39; wine glasses&#39;</span><span class="p">],</span>
         <span class="n">create_dir</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
 
 <span class="n">nest</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="s">&#39;runs&#39;</span><span class="p">)</span>
@@ -280,7 +274,7 @@ control dictionary:</p>
         <li class="right" >
           <a href="nestly.scripts.html" title="scripts Package"
              >previous</a> |</li>
-        <li><a href="index.html">nestly 0.2 documentation</a> &raquo;</li> 
+        <li><a href="index.html">nestly 0.3 documentation</a> &raquo;</li> 
       </ul>
     </div>
     <div class="footer">
