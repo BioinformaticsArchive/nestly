@@ -1,0 +1,204 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>nestly.scons &mdash; nestly 0.3 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="nestly 0.3 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">nestly 0.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for nestly.scons</h1><div class="highlight"><pre>
+<span class="sd">&quot;&quot;&quot;SCons integration for nestly.&quot;&quot;&quot;</span>
+<span class="kn">from</span> <span class="nn">collections</span> <span class="kn">import</span> <span class="n">OrderedDict</span>
+
+<div class="viewcode-block" id="name_targets"><a class="viewcode-back" href="../../nestly.html#nestly.scons.name_targets">[docs]</a><span class="k">def</span> <span class="nf">name_targets</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Wrap a function such that returning ``&#39;a&#39;, &#39;b&#39;, &#39;c&#39;, [1, 2, 3]`` transforms</span>
+<span class="sd">    the value into ``dict(a=1, b=2, c=3)``.</span>
+
+<span class="sd">    This is useful in the case where the last parameter is an SCons command.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">wrap</span><span class="p">(</span><span class="o">*</span><span class="n">a</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">func</span><span class="p">(</span><span class="o">*</span><span class="n">a</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">ret</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">ret</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+    <span class="k">return</span> <span class="n">wrap</span>
+</div>
+<div class="viewcode-block" id="SConsWrap"><a class="viewcode-back" href="../../nestly.html#nestly.scons.SConsWrap">[docs]</a><span class="k">class</span> <span class="nc">SConsWrap</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A Nest wrapper to add SCons integration.</span>
+
+<span class="sd">    This class wraps a Nest in order to provide methods which are useful for</span>
+<span class="sd">    using nestly with SCons.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nest</span><span class="p">,</span> <span class="n">dest_dir</span><span class="o">=</span><span class="s">&#39;.&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Initialize an SConsWrap.</span>
+
+<span class="sd">        Takes the Nest to operate on and the base directory for all output</span>
+<span class="sd">        directories.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">nest</span> <span class="o">=</span> <span class="n">nest</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">dest_dir</span> <span class="o">=</span> <span class="n">dest_dir</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aggregates</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
+
+<div class="viewcode-block" id="SConsWrap.add"><a class="viewcode-back" href="../../nestly.html#nestly.scons.SConsWrap.add">[docs]</a>    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">a</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="s">&quot;Call .add on the wrapped Nest.&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">nest</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="o">*</span><span class="n">a</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="SConsWrap.add_nest"><a class="viewcode-back" href="../../nestly.html#nestly.scons.SConsWrap.add_nest">[docs]</a>    <span class="k">def</span> <span class="nf">add_nest</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">):</span>
+        <span class="s">&quot;A simple decorator which wraps nest.add.&quot;</span>
+        <span class="k">def</span> <span class="nf">deco</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nest</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">name</span> <span class="ow">or</span> <span class="n">func</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="n">func</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">func</span>
+        <span class="k">return</span> <span class="n">deco</span>
+</div>
+<div class="viewcode-block" id="SConsWrap.add_target"><a class="viewcode-back" href="../../nestly.html#nestly.scons.SConsWrap.add_target">[docs]</a>    <span class="k">def</span> <span class="nf">add_target</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add an SCons target to this nest.</span>
+
+<span class="sd">        The function decorated will be immediately called with each of the</span>
+<span class="sd">        output directories and current control dictionaries. Each result will</span>
+<span class="sd">        be added to the respective control dictionary for later nests to</span>
+<span class="sd">        access.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="nf">deco</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+            <span class="n">targets</span> <span class="o">=</span> <span class="p">[(</span><span class="n">control</span><span class="p">,</span> <span class="n">func</span><span class="p">(</span><span class="nb">dir</span><span class="p">,</span> <span class="n">control</span><span class="p">))</span>
+                       <span class="k">for</span> <span class="nb">dir</span><span class="p">,</span> <span class="n">control</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">nest</span><span class="o">.</span><span class="n">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dest_dir</span><span class="p">)]</span>
+            <span class="k">def</span> <span class="nf">nestfunc</span><span class="p">(</span><span class="n">control</span><span class="p">):</span>
+                <span class="k">return</span> <span class="p">[</span><span class="nb">next</span><span class="p">(</span><span class="n">target</span> <span class="k">for</span> <span class="n">c</span><span class="p">,</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">targets</span> <span class="k">if</span> <span class="n">control</span> <span class="o">==</span> <span class="n">c</span><span class="p">)]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nest</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">name</span> <span class="ow">or</span> <span class="n">func</span><span class="o">.</span><span class="n">__name__</span><span class="p">,</span> <span class="n">nestfunc</span><span class="p">,</span> <span class="n">create_dir</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">func</span>
+        <span class="k">return</span> <span class="n">deco</span>
+</div>
+<div class="viewcode-block" id="SConsWrap.add_aggregate"><a class="viewcode-back" href="../../nestly.html#nestly.scons.SConsWrap.add_aggregate">[docs]</a>    <span class="k">def</span> <span class="nf">add_aggregate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">data_fac</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Add an aggregate target to this nest.</span>
+
+<span class="sd">        The first argument is a nullary factory function which will be called</span>
+<span class="sd">        immediately for each of the current control dictionaries and stored in</span>
+<span class="sd">        each dictionary with the given name like in ``add_target``. After</span>
+<span class="sd">        ``finalize_aggregate`` or ``finalize_all_aggregates`` are called, the</span>
+<span class="sd">        decorated function will then be called in the same way as</span>
+<span class="sd">        ``add_target``, except with an additional argument: the value which was</span>
+<span class="sd">        returned by the factory function.</span>
+
+<span class="sd">        Since nests added after the aggregate can access the factory function&#39;s</span>
+<span class="sd">        value, it can be mutated to provide additional values for use when the</span>
+<span class="sd">        decorated function is called.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">def</span> <span class="nf">deco</span><span class="p">(</span><span class="n">func</span><span class="p">):</span>
+            <span class="n">agg_name</span> <span class="o">=</span> <span class="n">name</span> <span class="ow">or</span> <span class="n">func</span><span class="o">.</span><span class="n">__name__</span>
+            <span class="n">finalizers</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aggregates</span><span class="p">[</span><span class="n">agg_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="nd">@self.add_target</span><span class="p">(</span><span class="n">agg_name</span><span class="p">)</span>
+            <span class="k">def</span> <span class="nf">wrap</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="n">c</span><span class="p">):</span>
+                <span class="n">data</span> <span class="o">=</span> <span class="n">data_fac</span><span class="p">()</span>
+                <span class="k">def</span> <span class="nf">finalize</span><span class="p">():</span>
+                    <span class="k">return</span> <span class="n">func</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+                <span class="n">finalizers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">finalize</span><span class="p">)</span>
+                <span class="k">return</span> <span class="n">data</span>
+            <span class="k">return</span> <span class="n">wrap</span>
+        <span class="k">return</span> <span class="n">deco</span>
+</div>
+<div class="viewcode-block" id="SConsWrap.finalize_aggregate"><a class="viewcode-back" href="../../nestly.html#nestly.scons.SConsWrap.finalize_aggregate">[docs]</a>    <span class="k">def</span> <span class="nf">finalize_aggregate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">aggregate</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Call the finalizers for one particular aggregate.</span>
+
+<span class="sd">        Finalizing an aggregate this way means that it will not be finalized by</span>
+<span class="sd">        any future calls to ``finalize_all_aggregates``.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">finalizer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">aggregates</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">aggregate</span><span class="p">):</span>
+            <span class="n">finalizer</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="SConsWrap.finalize_all_aggregates"><a class="viewcode-back" href="../../nestly.html#nestly.scons.SConsWrap.finalize_all_aggregates">[docs]</a>    <span class="k">def</span> <span class="nf">finalize_all_aggregates</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Call the finalizers for all defined aggregates.</span>
+
+<span class="sd">        If any aggregates have been specifically finalized by</span>
+<span class="sd">        ``finalize_aggregate``, they will not be finalized again. This function</span>
+<span class="sd">        itself calls ``finalize_aggregate``; if ``finalize_all_aggregates`` is</span>
+<span class="sd">        called twice, aggregates will not be finalized twice.</span>
+
+<span class="sd">        Aggregates will be finalized in the same order in which they were</span>
+<span class="sd">        defined.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">aggregate</span> <span class="ow">in</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">aggregates</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">finalize_aggregate</span><span class="p">(</span><span class="n">aggregate</span><span class="p">)</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">nestly 0.3 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Erick Matsen et al..
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.
+    </div>
+  </body>
+</html>

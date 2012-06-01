@@ -54,6 +54,7 @@
   <ul>
 <li><a class="reference internal" href="#">Command line tools</a><ul>
 <li><a class="reference internal" href="#nestrun"><tt class="docutils literal"><span class="pre">nestrun</span></tt></a><ul>
+<li><a class="reference internal" href="#signals">Signals</a></li>
 <li><a class="reference internal" href="#help">Help</a></li>
 </ul>
 </li>
@@ -105,6 +106,32 @@
 substitute. Substitution is performed using the Python built-in
 <tt class="docutils literal"><span class="pre">str.format</span></tt> method. See the <a class="reference external" href="http://docs.python.org/library/string.html#formatstrings">Python Formatter documentation</a> for details on syntax,
 and <tt class="docutils literal"><span class="pre">examples/jsonrun/do_nestrun.sh</span></tt> for an example.</p>
+<div class="section" id="signals">
+<h3>Signals<a class="headerlink" href="#signals" title="Permalink to this headline">¶</a></h3>
+<p><tt class="docutils literal"><span class="pre">nestrun</span></tt> also handles some signals by default.</p>
+<dl class="describe">
+<dt>
+<tt class="descname">SIGTERM</tt></dt>
+<dd><p>This tells <tt class="docutils literal"><span class="pre">nestrun</span></tt> to stop spawning jobs. All jobs that were already
+spawned will continue running.</p>
+</dd></dl>
+
+<dl class="describe">
+<dt>
+<tt class="descname">SIGINT</tt></dt>
+<dd><p>This tells <tt class="docutils literal"><span class="pre">nestrun</span></tt> to terminate if received twice. On the first
+SIGTERM, <tt class="docutils literal"><span class="pre">nestrun</span></tt> will emit a warning message; on the second, it will
+terminate all jobs and then itself.</p>
+</dd></dl>
+
+<dl class="describe">
+<dt>
+<tt class="descname">SIGUSR1</tt></dt>
+<dd><p>This tells <tt class="docutils literal"><span class="pre">nestrun</span></tt> to immediately write a list of all currently-running
+processes and their working directories to stderr, then flush stderr.</p>
+</dd></dl>
+
+</div>
 <div class="section" id="help">
 <h3>Help<a class="headerlink" href="#help" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-python"><pre>usage: nestrun.py [-h] [-j N] [--template 'template text'] [--stop-on-error]
@@ -202,7 +229,7 @@ optional arguments:
     </div>
     <div class="footer">
         &copy; Copyright 2011, Erick Matsen et al..
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.
     </div>
   </body>
 </html>

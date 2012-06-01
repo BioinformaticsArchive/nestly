@@ -26,6 +26,7 @@
     <script type="text/javascript" src="_static/underscore.js"></script>
     <script type="text/javascript" src="_static/doctools.js"></script>
     <link rel="top" title="nestly 0.3 documentation" href="index.html" />
+    <link rel="next" title="SCons integration" href="scons.html" />
     <link rel="prev" title="scripts Package" href="nestly.scripts.html" /> 
   </head>
   <body>
@@ -38,6 +39,9 @@
         <li class="right" >
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
+        <li class="right" >
+          <a href="scons.html" title="SCons integration"
+             accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="nestly.scripts.html" title="scripts Package"
              accesskey="P">previous</a> |</li>
@@ -54,6 +58,7 @@
 <li><a class="reference internal" href="#meal">Meal</a></li>
 </ul>
 </li>
+<li><a class="reference internal" href="#scons-integration">SCons integration</a></li>
 </ul>
 </li>
 </ul>
@@ -61,6 +66,9 @@
   <h4>Previous topic</h4>
   <p class="topless"><a href="nestly.scripts.html"
                         title="previous chapter">scripts Package</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="scons.html"
+                        title="next chapter">SCons integration</a></p>
   <h3>This Page</h3>
   <ul class="this-page-menu">
     <li><a href="_sources/examples.txt"
@@ -166,10 +174,55 @@ example.</p>
 <span class="n">nest</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="s">&#39;runs&#39;</span><span class="p">)</span>
 </pre></div>
 </td></tr></table></div>
+<p>This example is then run with the <tt class="docutils literal"><span class="pre">../examples/basic_nest/do_nestrun.sh</span></tt> script.</p>
+<div class="highlight-sh"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13</pre></div></td><td class="code"><div class="highlight"><pre><span class="c">#!/bin/sh</span>
+
+<span class="nb">set</span> -e
+<span class="nb">set</span> -u
+
+<span class="nv">CONTROLS</span><span class="o">=</span><span class="k">$(</span>find runs -name control.json<span class="k">)</span>
+<span class="nb">echo</span> <span class="nv">$CONTROLS</span>
+
+nestrun --processes 2 --template-file echo.sh <span class="nv">$CONTROLS</span>
+
+<span class="c"># Merge the CSV files named &#39;{strategy}.csv&#39; (where strategy value is taken</span>
+<span class="c"># from the control file)</span>
+nestagg delim <span class="s1">&#39;{strategy}.csv&#39;</span> <span class="nv">$CONTROLS</span> -o aggregated.csv
+</pre></div>
+</td></tr></table></div>
+<p><tt class="docutils literal"><span class="pre">echo.sh</span></tt> is just the simple script that runs <tt class="docutils literal"><span class="pre">nestrun</span></tt> and aggregates the
+results into an <tt class="docutils literal"><span class="pre">aggregate.csv</span></tt> file:</p>
+<div class="highlight-sh"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6
+7</pre></div></td><td class="code"><div class="highlight"><pre><span class="c">#!/bin/sh</span>
+<span class="c">#</span>
+<span class="c"># Echo the value of two fake output variables: var1, which is always 13, and</span>
+<span class="c"># var2, which is 10 times the run_count.</span>
+
+<span class="nb">echo</span> <span class="s2">&quot;var1,var2</span>
+<span class="s2">13,{run_count}0&quot;</span> &gt; <span class="s2">&quot;{strategy}.csv&quot;</span>
+</pre></div>
+</td></tr></table></div>
 </div>
 <div class="section" id="meal">
 <h3>Meal<a class="headerlink" href="#meal" title="Permalink to this headline">¶</a></h3>
-<p>This is quite a bit more complicated, with lookups on previous values of the
+<p>This is a bit more complicated, with lookups on previous values of the
 control dictionary:</p>
 <div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
  2
@@ -227,24 +280,24 @@ control dictionary:</p>
 
 <span class="n">bn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span>
 
-<span class="c"># start by mirroring the two directory levels in startersdir, and name those</span>
-<span class="c"># directories &quot;ethnicity&quot; and &quot;dietary&quot;</span>
+<span class="c"># Start by mirroring the two directory levels in startersdir, and name those</span>
+<span class="c"># directories &quot;ethnicity&quot; and &quot;dietary&quot;.</span>
 <span class="n">nest</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;ethnicity&#39;</span><span class="p">,</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">startersdir</span><span class="p">,</span> <span class="s">&#39;*&#39;</span><span class="p">)),</span>
     <span class="n">label_func</span><span class="o">=</span><span class="n">bn</span><span class="p">)</span>
 <span class="n">nest</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;dietary&#39;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="s">&#39;ethnicity&#39;</span><span class="p">],</span> <span class="s">&#39;*&#39;</span><span class="p">)),</span>
     <span class="n">label_func</span><span class="o">=</span><span class="n">bn</span><span class="p">)</span>
 
-<span class="c">## now get all of the starters</span>
+<span class="c">## Now get all of the starters.</span>
 <span class="n">nest</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;starter&#39;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="s">&#39;dietary&#39;</span><span class="p">],</span> <span class="s">&#39;*&#39;</span><span class="p">)),</span>
     <span class="n">label_func</span><span class="o">=</span><span class="n">stripext</span><span class="p">)</span>
-<span class="c">## now get the corresponding mains</span>
+<span class="c">## Then get the corresponding mains.</span>
 <span class="n">nest</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;main&#39;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">mainsdir</span><span class="p">,</span> <span class="n">bn</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="s">&#39;ethnicity&#39;</span><span class="p">])</span> <span class="o">+</span> <span class="s">&quot;_stirfry.txt&quot;</span><span class="p">)],</span>
     <span class="n">label_func</span><span class="o">=</span><span class="n">stripext</span><span class="p">)</span>
 
-<span class="c">## get only the tasty wines</span>
+<span class="c">## Take only the tasty wines.</span>
 <span class="n">nest</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;wine&#39;</span><span class="p">,</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">winedir</span><span class="p">,</span> <span class="s">&#39;*.tasty&#39;</span><span class="p">)),</span>
     <span class="n">label_func</span><span class="o">=</span><span class="n">stripext</span><span class="p">)</span>
-<span class="c">## the wineglasses should be chosen by the wine choice, but we don&#39;t want to</span>
+<span class="c">## The wineglasses should be chosen by the wine choice, but we don&#39;t want to</span>
 <span class="c">## make a directory for those.</span>
 <span class="n">nest</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;wineglass&#39;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="p">[</span><span class="n">stripext</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="s">&#39;wine&#39;</span><span class="p">])</span> <span class="o">+</span> <span class="s">&#39; wine glasses&#39;</span><span class="p">],</span>
         <span class="n">create_dir</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
@@ -253,6 +306,186 @@ control dictionary:</p>
 </pre></div>
 </td></tr></table></div>
 </div>
+</div>
+<div class="section" id="scons-integration">
+<h2>SCons integration<a class="headerlink" href="#scons-integration" title="Permalink to this headline">¶</a></h2>
+<p>This <tt class="docutils literal"><span class="pre">SConstruct</span></tt> file is an example of using nestly with the SCons build
+system:</p>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+55
+56
+57
+58
+59
+60
+61
+62
+63
+64
+65
+66
+67
+68
+69
+70
+71
+72
+73
+74
+75
+76
+77
+78
+79
+80
+81
+82
+83
+84
+85
+86
+87</pre></div></td><td class="code"><div class="highlight"><pre><span class="c"># -*- python -*-</span>
+<span class="c">#</span>
+<span class="c"># This example takes every file in the inputs directory and performs the</span>
+<span class="c"># following operations. First, it cuts out a column range from every line in</span>
+<span class="c"># the file, in this case either 1-5 or 3-40. After it does this it optionally</span>
+<span class="c"># filters out every line that has an &quot;o&quot; or &quot;O&quot;. Then it runs wc on every such</span>
+<span class="c"># file. These word counts then get aggregated together by the prep_tab.sh</span>
+<span class="c"># script.</span>
+<span class="c">#</span>
+<span class="c"># Assuming that SCons is installed, you should be able to run this example by</span>
+<span class="c"># simply typing `scons` in this directory. That should build a series of things</span>
+<span class="c"># in the `build` directory. Because this is a build system, deleting a file or</span>
+<span class="c"># directory in the build directory and then running scons will simply rerun the</span>
+<span class="c"># needed parts.</span>
+
+<span class="kn">from</span> <span class="nn">os.path</span> <span class="kn">import</span> <span class="n">join</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="kn">from</span> <span class="nn">nestly.scons</span> <span class="kn">import</span> <span class="n">SConsWrap</span>
+<span class="kn">from</span> <span class="nn">nestly</span> <span class="kn">import</span> <span class="n">Nest</span>
+
+<span class="n">nest</span> <span class="o">=</span> <span class="n">Nest</span><span class="p">()</span>
+<span class="n">w</span> <span class="o">=</span> <span class="n">SConsWrap</span><span class="p">(</span><span class="n">nest</span><span class="p">,</span> <span class="s">&#39;build&#39;</span><span class="p">)</span>
+
+
+<span class="c"># Initialize an aggregator that runs prep_tab.sh on all of its arguments. The</span>
+<span class="c"># `list` argument specifies that this aggregator will be a list of functions.</span>
+<span class="c"># This aggregator is then populated below with `append`.</span>
+<span class="nd">@w.add_aggregate</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">all_counts</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">Command</span><span class="p">(</span><span class="n">join</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="s">&#39;all_counts.tab&#39;</span><span class="p">),</span>
+                   <span class="n">inputs</span><span class="p">,</span>
+                   <span class="s">&#39;./prep_tab.sh $SOURCES | column -t &gt;$TARGET&#39;</span><span class="p">)</span>
+
+<span class="c"># Initialize an aggregator that concatenates all of the cut files into one.</span>
+<span class="nd">@w.add_aggregate</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">all_cut</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">Command</span><span class="p">(</span><span class="n">join</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="s">&#39;all_cut.txt&#39;</span><span class="p">),</span>
+                   <span class="n">inputs</span><span class="p">,</span>
+                   <span class="s">&#39;cat $SOURCES &gt;$TARGET&#39;</span><span class="p">)</span>
+
+<span class="c"># Add a nest with the name &#39;input_file&#39; that the files in the inputs directory</span>
+<span class="c"># as its nestable list. Make its label function just the basename.</span>
+<span class="n">w</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;input_file&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;inputs&#39;</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="s">&#39;inputs&#39;</span><span class="p">)],</span>
+      <span class="n">label_func</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">)</span>
+
+<span class="c"># This determines the column range we will cut out of the file.</span>
+<span class="n">w</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;cut_range&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;1-5&#39;</span><span class="p">,</span> <span class="s">&#39;3-40&#39;</span><span class="p">])</span>
+
+<span class="c"># This adds a nest with the name &#39;cut&#39;, but also makes an SCons target out of</span>
+<span class="c"># the result.</span>
+<span class="nd">@w.add_target</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">cut</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="n">c</span><span class="p">):</span>
+    <span class="n">cut</span><span class="p">,</span> <span class="o">=</span> <span class="n">Command</span><span class="p">(</span><span class="n">join</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="s">&#39;cut&#39;</span><span class="p">),</span>
+                   <span class="n">c</span><span class="p">[</span><span class="s">&#39;input_file&#39;</span><span class="p">],</span>
+                   <span class="s">&#39;cut -c {0[cut_range]} &lt;$SOURCE &gt;$TARGET&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
+    <span class="c"># Here we add this cut file to the all_cut aggregator.</span>
+    <span class="n">c</span><span class="p">[</span><span class="s">&#39;all_cut&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">cut</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">cut</span>
+
+<span class="c"># This determines if we remove the lines with o&#39;s.</span>
+<span class="n">w</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;o_choice&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;remove_o&#39;</span><span class="p">,</span> <span class="s">&#39;leave_o&#39;</span><span class="p">])</span>
+
+<span class="nd">@w.add_target</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">o_choice</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="n">c</span><span class="p">):</span>
+    <span class="c"># If we leave the o lines, then we don&#39;t have to do anything.</span>
+    <span class="k">if</span> <span class="n">c</span><span class="p">[</span><span class="s">&#39;o_choice&#39;</span><span class="p">]</span> <span class="o">==</span> <span class="s">&#39;leave_o&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">c</span><span class="p">[</span><span class="s">&#39;cut&#39;</span><span class="p">]</span>
+
+    <span class="c"># If we want to remove the o lines, then we have to make an SCons Command</span>
+    <span class="c"># that does so with sed.</span>
+    <span class="k">return</span> <span class="n">Command</span><span class="p">(</span><span class="n">join</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="s">&#39;o_removed&#39;</span><span class="p">),</span>
+                   <span class="n">c</span><span class="p">[</span><span class="s">&#39;cut&#39;</span><span class="p">],</span>
+                   <span class="s">&#39;sed &quot;/[oO]/d&quot; &lt;$SOURCE &gt;$TARGET&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+
+<span class="c"># Add a target for the word counts.</span>
+<span class="nd">@w.add_target</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">counts</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="n">c</span><span class="p">):</span>
+    <span class="n">counts</span><span class="p">,</span> <span class="o">=</span> <span class="n">Command</span><span class="p">(</span><span class="n">join</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="s">&#39;counts&#39;</span><span class="p">),</span>
+                      <span class="n">c</span><span class="p">[</span><span class="s">&#39;o_choice&#39;</span><span class="p">],</span>
+                      <span class="s">&#39;wc &lt;$SOURCE &gt;$TARGET&#39;</span><span class="p">)</span>
+    <span class="n">c</span><span class="p">[</span><span class="s">&#39;all_counts&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">counts</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">counts</span>
+
+<span class="c"># When we finalize all of the aggregates, all of the aggregate functions are</span>
+<span class="c"># called, creating the corresponding dependencies.</span>
+<span class="n">w</span><span class="o">.</span><span class="n">finalize_all_aggregates</span><span class="p">()</span>
+</pre></div>
+</td></tr></table></div>
 </div>
 </div>
 
@@ -272,6 +505,9 @@ control dictionary:</p>
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
+          <a href="scons.html" title="SCons integration"
+             >next</a> |</li>
+        <li class="right" >
           <a href="nestly.scripts.html" title="scripts Package"
              >previous</a> |</li>
         <li><a href="index.html">nestly 0.3 documentation</a> &raquo;</li> 
@@ -279,7 +515,7 @@ control dictionary:</p>
     </div>
     <div class="footer">
         &copy; Copyright 2011, Erick Matsen et al..
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.
     </div>
   </body>
 </html>

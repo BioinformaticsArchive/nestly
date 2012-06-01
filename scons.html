@@ -1,0 +1,344 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>SCons integration &mdash; nestly 0.3 documentation</title>
+    
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="nestly 0.3 documentation" href="index.html" />
+    <link rel="prev" title="Examples" href="examples.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="examples.html" title="Examples"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">nestly 0.3 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">SCons integration</a><ul>
+<li><a class="reference internal" href="#constructing-an-sconswrap">Constructing an <tt class="docutils literal"><span class="pre">SConsWrap</span></tt></a></li>
+<li><a class="reference internal" href="#adding-nests">Adding nests</a></li>
+<li><a class="reference internal" href="#adding-targets">Adding targets</a></li>
+<li><a class="reference internal" href="#adding-aggregates">Adding aggregates</a></li>
+<li><a class="reference internal" href="#calling-commands-from-scons">Calling commands from SCons</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="examples.html"
+                        title="previous chapter">Examples</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/scons.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="scons-integration">
+<h1>SCons integration<a class="headerlink" href="#scons-integration" title="Permalink to this headline">¶</a></h1>
+<p><a class="reference external" href="http://scons.org/">SCons</a> is an excellent build tool (analogous to <tt class="docutils literal"><span class="pre">make</span></tt>). The
+<a class="reference internal" href="nestly.html#module-nestly.scons" title="nestly.scons"><tt class="xref py py-mod docutils literal"><span class="pre">nestly.scons</span></tt></a> module is provided to make integrating nestly with SCons
+easier. <a class="reference internal" href="nestly.html#nestly.scons.SConsWrap" title="nestly.scons.SConsWrap"><tt class="xref py py-class docutils literal"><span class="pre">SConsWrap</span></tt></a> wraps a <a class="reference internal" href="nestly.html#nestly.core.Nest" title="nestly.core.Nest"><tt class="xref py py-class docutils literal"><span class="pre">Nest</span></tt></a> object to provide
+additional methods for adding nests. SCons is complex and is fully documented
+on their website, so we do not describe it here. However, for the purposes of
+this document, it suffices to know that dependencies are created when a
+<em>target</em> function is called.</p>
+<p>The basic idea is that when writing an SConstruct file (analogous to a
+Makefile), these <a class="reference internal" href="nestly.html#nestly.scons.SConsWrap" title="nestly.scons.SConsWrap"><tt class="xref py py-class docutils literal"><span class="pre">SConsWrap</span></tt></a> objects extend the usual nestly
+functionality with build dependencies. Specifically, there are functions that
+add targets to the nest. When SCons is invoked, these targets are identified
+as dependencies and the needed code is run. There are also aggregate functions
+(this is aggregate with a hard second &#8220;a&#8221;; rhymes with &#8220;Watergate&#8221;) that don&#8217;t
+get immediately called, but rather when the <a class="reference internal" href="nestly.html#nestly.scons.SConsWrap.finalize_aggregate" title="nestly.scons.SConsWrap.finalize_aggregate"><tt class="xref py py-meth docutils literal"><span class="pre">finalize_aggregate()</span></tt></a> method
+is called.</p>
+<div class="section" id="constructing-an-sconswrap">
+<h2>Constructing an <tt class="docutils literal"><span class="pre">SConsWrap</span></tt><a class="headerlink" href="#constructing-an-sconswrap" title="Permalink to this headline">¶</a></h2>
+<p><tt class="docutils literal"><span class="pre">SConsWrap</span></tt> objects wrap and modify a <tt class="docutils literal"><span class="pre">Nest</span></tt> object. Optionally, a
+destination directory can be given to the <tt class="docutils literal"><span class="pre">SConsWrap</span></tt> which will be passed to
+<a class="reference internal" href="nestly.html#nestly.core.Nest.iter" title="nestly.core.Nest.iter"><tt class="xref py py-meth docutils literal"><span class="pre">Nest.iter()</span></tt></a>:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">nest</span> <span class="o">=</span> <span class="n">Nest</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wrap</span> <span class="o">=</span> <span class="n">SConsWrap</span><span class="p">(</span><span class="n">nest</span><span class="p">,</span> <span class="n">dest_dir</span><span class="o">=</span><span class="s">&#39;build&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In this example, all the nests created by <tt class="docutils literal"><span class="pre">wrap</span></tt> will go under the <tt class="docutils literal"><span class="pre">build</span></tt>
+directory. Throughout the rest of this document, <tt class="docutils literal"><span class="pre">nest</span></tt> will refer to this
+same <a class="reference internal" href="nestly.html#nestly.core.Nest" title="nestly.core.Nest"><tt class="xref py py-class docutils literal"><span class="pre">Nest</span></tt></a> instance and <tt class="docutils literal"><span class="pre">wrap</span></tt> will refer to this same
+<a class="reference internal" href="nestly.html#nestly.scons.SConsWrap" title="nestly.scons.SConsWrap"><tt class="xref py py-class docutils literal"><span class="pre">SConsWrap</span></tt></a> instance.</p>
+</div>
+<div class="section" id="adding-nests">
+<h2>Adding nests<a class="headerlink" href="#adding-nests" title="Permalink to this headline">¶</a></h2>
+<p>Nests can still be added to the <tt class="docutils literal"><span class="pre">nest</span></tt> object:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">nest</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;nest1&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;spam&#39;</span><span class="p">,</span> <span class="s">&#39;eggs&#39;</span><span class="p">])</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="nestly.html#nestly.scons.SConsWrap" title="nestly.scons.SConsWrap"><tt class="xref py py-class docutils literal"><span class="pre">SConsWrap</span></tt></a> also provides a convenience decorator
+<a class="reference internal" href="nestly.html#nestly.scons.SConsWrap.add_nest" title="nestly.scons.SConsWrap.add_nest"><tt class="xref py py-meth docutils literal"><span class="pre">SConsWrap.add_nest()</span></tt></a> for adding nests which use a function as their
+nestable. The following examples are exactly equivalent:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nd">@wrap.add_nest</span><span class="p">(</span><span class="s">&#39;nest2&#39;</span><span class="p">,</span> <span class="n">label_func</span><span class="o">=</span><span class="nb">str</span><span class="o">.</span><span class="n">strip</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">nest2</span><span class="p">(</span><span class="n">c</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">[</span><span class="s">&#39;  __&#39;</span> <span class="o">+</span> <span class="n">c</span><span class="p">[</span><span class="s">&#39;nest1&#39;</span><span class="p">],</span> <span class="n">c</span><span class="p">[</span><span class="s">&#39;nest1&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39;__  &#39;</span><span class="p">]</span>
+
+<span class="k">def</span> <span class="nf">nest2</span><span class="p">(</span><span class="n">c</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">[</span><span class="s">&#39;  __&#39;</span> <span class="o">+</span> <span class="n">c</span><span class="p">[</span><span class="s">&#39;nest1&#39;</span><span class="p">],</span> <span class="n">c</span><span class="p">[</span><span class="s">&#39;nest1&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39;__  &#39;</span><span class="p">]</span>
+<span class="n">nest</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;nest2&#39;</span><span class="p">,</span> <span class="n">nest2</span><span class="p">,</span> <span class="n">label_func</span><span class="o">=</span><span class="nb">str</span><span class="o">.</span><span class="n">strip</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Another advantage to using the decorator is that the name parameter is
+optional; if it&#8217;s omitted, the name of the nest is taken from the name of the
+function. As a result, the following example is also equivalent:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nd">@wrap.add_nest</span><span class="p">(</span><span class="n">label_func</span><span class="o">=</span><span class="nb">str</span><span class="o">.</span><span class="n">strip</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">nest2</span><span class="p">(</span><span class="n">c</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">[</span><span class="s">&#39;  __&#39;</span> <span class="o">+</span> <span class="n">c</span><span class="p">[</span><span class="s">&#39;nest1&#39;</span><span class="p">],</span> <span class="n">c</span><span class="p">[</span><span class="s">&#39;nest1&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39;__  &#39;</span><span class="p">]</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="nestly.html#nestly.scons.SConsWrap.add_nest" title="nestly.scons.SConsWrap.add_nest"><tt class="xref py py-meth docutils literal"><span class="pre">add_nest()</span></tt></a> must always be called before being applied as a
+decorator, though. <tt class="docutils literal"><span class="pre">&#64;wrap.add_nest</span></tt> is not valid; the correct usage is
+<tt class="docutils literal"><span class="pre">&#64;wrap.add_nest()</span></tt> if no other parameters are specified.</p>
+</div>
+<div class="section" id="adding-targets">
+<h2>Adding targets<a class="headerlink" href="#adding-targets" title="Permalink to this headline">¶</a></h2>
+<p>The fundamental action of SCons integration is in adding a target to a nest.
+Adding a target is very much like adding a nest in that it will add a key to
+the control dictionary, except that it will not add any branching to a nest.
+For example, successive calls to <a class="reference internal" href="nestly.html#nestly.core.Nest.add" title="nestly.core.Nest.add"><tt class="xref py py-meth docutils literal"><span class="pre">Nest.add()</span></tt></a>
+produces results like the following:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">nest</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;nest1&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;A&#39;</span><span class="p">,</span> <span class="s">&#39;B&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nest</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;nest2&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;C&#39;</span><span class="p">,</span> <span class="s">&#39;D&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">([</span><span class="n">c</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">for</span> <span class="n">outdir</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">nest</span><span class="p">])</span>
+<span class="go">[[(&#39;nest1&#39;, &#39;A&#39;), (&#39;nest2&#39;, &#39;C&#39;)],</span>
+<span class="go"> [(&#39;nest1&#39;, &#39;A&#39;), (&#39;nest2&#39;, &#39;D&#39;)],</span>
+<span class="go"> [(&#39;nest1&#39;, &#39;B&#39;), (&#39;nest2&#39;, &#39;C&#39;)],</span>
+<span class="go"> [(&#39;nest1&#39;, &#39;B&#39;), (&#39;nest2&#39;, &#39;D&#39;)]]</span>
+</pre></div>
+</div>
+<p>A crude illustration of how <tt class="docutils literal"><span class="pre">nest1</span></tt> and <tt class="docutils literal"><span class="pre">nest2</span></tt> relate:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">#               C .---- - -</span>
+<span class="c">#    A .----------o nest2</span>
+<span class="c">#      |        D &#39;---- - -</span>
+<span class="c"># o----o nest1</span>
+<span class="c">#      |        C .---- - -</span>
+<span class="c">#    B &#39;----------o nest2</span>
+<span class="c">#               D &#39;---- - -</span>
+</pre></div>
+</div>
+<p>Calling <a class="reference internal" href="nestly.html#nestly.scons.SConsWrap.add_target" title="nestly.scons.SConsWrap.add_target"><tt class="xref py py-meth docutils literal"><span class="pre">add_target()</span></tt></a>, however, produces slightly different
+results:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">nest</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;nest1&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;A&#39;</span><span class="p">,</span> <span class="s">&#39;B&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@wrap.add_target</span><span class="p">()</span>
+<span class="gp">... </span><span class="k">def</span> <span class="nf">target1</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="n">c</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="s">&#39;t-{0[nest1]}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">c</span><span class="p">)</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">([</span><span class="n">c</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">for</span> <span class="n">outdir</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">nest</span><span class="p">])</span>
+<span class="go">[[(&#39;nest1&#39;, &#39;A&#39;), (&#39;target1&#39;, &#39;t-A&#39;)],</span>
+<span class="go"> [(&#39;nest1&#39;, &#39;B&#39;), (&#39;target1&#39;, &#39;t-B&#39;)]]</span>
+</pre></div>
+</div>
+<p>And a similar illustration of how <tt class="docutils literal"><span class="pre">nest1</span></tt> and <tt class="docutils literal"><span class="pre">target1</span></tt> relate:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="c">#                t-A</span>
+<span class="c">#    A .----------o------ - -</span>
+<span class="c"># o----o nest1      target1</span>
+<span class="c">#    B &#39;----------o------ - -</span>
+<span class="c">#                t-B</span>
+</pre></div>
+</div>
+<p><a class="reference internal" href="nestly.html#nestly.scons.SConsWrap.add_target" title="nestly.scons.SConsWrap.add_target"><tt class="xref py py-meth docutils literal"><span class="pre">add_target()</span></tt></a> does not increase the total number of control
+dictionaries from 2; it only updates each existing control dictionary to add
+the <tt class="docutils literal"><span class="pre">target1</span></tt> key. This is effectively the same as calling
+<a class="reference internal" href="nestly.html#nestly.core.Nest.add" title="nestly.core.Nest.add"><tt class="xref py py-meth docutils literal"><span class="pre">add()</span></tt></a> (or <a class="reference internal" href="nestly.html#nestly.scons.SConsWrap.add_nest" title="nestly.scons.SConsWrap.add_nest"><tt class="xref py py-meth docutils literal"><span class="pre">add_nest()</span></tt></a>) with a function
+and returning an iterable of one item:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">nest</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;nest1&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;A&#39;</span><span class="p">,</span> <span class="s">&#39;B&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@wrap.add_nest</span><span class="p">()</span>
+<span class="gp">... </span><span class="k">def</span> <span class="nf">target1</span><span class="p">(</span><span class="n">c</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">return</span> <span class="p">[</span><span class="s">&#39;t-{0[nest1]}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">c</span><span class="p">)]</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">pprint</span><span class="o">.</span><span class="n">pprint</span><span class="p">([</span><span class="n">c</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">for</span> <span class="n">outdir</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">nest</span><span class="p">])</span>
+<span class="go">[[(&#39;nest1&#39;, &#39;A&#39;), (&#39;target1&#39;, &#39;t-A&#39;)],</span>
+<span class="go"> [(&#39;nest1&#39;, &#39;B&#39;), (&#39;target1&#39;, &#39;t-B&#39;)]]</span>
+</pre></div>
+</div>
+<p>Astute readers might have noticed the key difference between the two: functions
+decorated with <a class="reference internal" href="nestly.html#nestly.scons.SConsWrap.add_target" title="nestly.scons.SConsWrap.add_target"><tt class="xref py py-meth docutils literal"><span class="pre">add_target()</span></tt></a> have an additional parameter,
+<tt class="docutils literal"><span class="pre">outdir</span></tt>. This allows targets to be built into the correct place in the
+directory hierarchy.</p>
+<p>The other notable difference is that the function decorated by
+<a class="reference internal" href="nestly.html#nestly.scons.SConsWrap.add_target" title="nestly.scons.SConsWrap.add_target"><tt class="xref py py-meth docutils literal"><span class="pre">add_target()</span></tt></a> will be called exactly once with each control
+dictionary. A function added with <a class="reference internal" href="nestly.html#nestly.core.Nest.add" title="nestly.core.Nest.add"><tt class="xref py py-meth docutils literal"><span class="pre">add()</span></tt></a> may be called
+more than once with equal control dictionaries.</p>
+<p>Like <a class="reference internal" href="nestly.html#nestly.scons.SConsWrap.add_nest" title="nestly.scons.SConsWrap.add_nest"><tt class="xref py py-meth docutils literal"><span class="pre">add_nest()</span></tt></a>, <a class="reference internal" href="nestly.html#nestly.scons.SConsWrap.add_target" title="nestly.scons.SConsWrap.add_target"><tt class="xref py py-meth docutils literal"><span class="pre">add_target()</span></tt></a> must always be
+called, and optionally takes the name of the target as the first parameter. No
+other parameters are accepted.</p>
+</div>
+<div class="section" id="adding-aggregates">
+<h2>Adding aggregates<a class="headerlink" href="#adding-aggregates" title="Permalink to this headline">¶</a></h2>
+<p>Aggregate functions are a special case of targets. Instead of the decorated
+function being called immediately, it will be called at some other specified
+moment. An example:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">nest</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;nest1&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;A&#39;</span><span class="p">,</span> <span class="s">&#39;B&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@wrap.add_aggregate</span><span class="p">(</span><span class="nb">list</span><span class="p">)</span>
+<span class="gp">... </span><span class="k">def</span> <span class="nf">aggregate1</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="k">print</span> <span class="s">&#39;agg&#39;</span><span class="p">,</span> <span class="n">c</span><span class="p">[</span><span class="s">&#39;nest1&#39;</span><span class="p">],</span> <span class="n">inputs</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nest</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;nest2&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;C&#39;</span><span class="p">,</span> <span class="s">&#39;D&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">nest</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;nest3&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;E&#39;</span><span class="p">,</span> <span class="s">&#39;F&#39;</span><span class="p">])</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="nd">@wrap.add_target</span><span class="p">()</span>
+<span class="gp">... </span><span class="k">def</span> <span class="nf">add_target</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="n">c</span><span class="p">):</span>
+<span class="gp">... </span>    <span class="n">c</span><span class="p">[</span><span class="s">&#39;aggregate1&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">c</span><span class="p">[</span><span class="s">&#39;nest2&#39;</span><span class="p">],</span> <span class="n">c</span><span class="p">[</span><span class="s">&#39;nest3&#39;</span><span class="p">]))</span>
+<span class="gp">...</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">wrap</span><span class="o">.</span><span class="n">finalize_aggregate</span><span class="p">(</span><span class="s">&#39;aggregate1&#39;</span><span class="p">)</span>
+<span class="go">agg A [(&#39;C&#39;, &#39;E&#39;), (&#39;C&#39;, &#39;F&#39;), (&#39;D&#39;, &#39;E&#39;), (&#39;D&#39;, &#39;F&#39;)]</span>
+<span class="go">agg B [(&#39;C&#39;, &#39;E&#39;), (&#39;C&#39;, &#39;F&#39;), (&#39;D&#39;, &#39;E&#39;), (&#39;D&#39;, &#39;F&#39;)]</span>
+</pre></div>
+</div>
+<p>The first argument to <a class="reference internal" href="nestly.html#nestly.scons.SConsWrap.add_aggregate" title="nestly.scons.SConsWrap.add_aggregate"><tt class="xref py py-meth docutils literal"><span class="pre">add_aggregate()</span></tt></a> is a factory function
+which will be called with no arguments and added to each control dictionary as
+the name of the aggregate. Targets added after the aggregate are able to access
+and modify the value added.</p>
+<p>When the aggregate is finalized, it will be called with output directory and
+control dictionary like a target, but also with the value which was added to
+the control dictionary. This allows aggregates to use values from later
+targets.</p>
+<p>Aggregates can either be finalized by calling
+<a class="reference internal" href="nestly.html#nestly.scons.SConsWrap.finalize_aggregate" title="nestly.scons.SConsWrap.finalize_aggregate"><tt class="xref py py-meth docutils literal"><span class="pre">finalize_aggregate()</span></tt></a> or
+<a class="reference internal" href="nestly.html#nestly.scons.SConsWrap.finalize_all_aggregates" title="nestly.scons.SConsWrap.finalize_all_aggregates"><tt class="xref py py-meth docutils literal"><span class="pre">finalize_all_aggregates()</span></tt></a>. The former will finalize a
+particular aggregate by name, while the latter finalizes all aggregates in the
+same order they were added.</p>
+<p>The second parameter to <a class="reference internal" href="nestly.html#nestly.scons.SConsWrap.add_aggregate" title="nestly.scons.SConsWrap.add_aggregate"><tt class="xref py py-meth docutils literal"><span class="pre">add_aggregate()</span></tt></a> is the same as the
+first parameter to <a class="reference internal" href="nestly.html#nestly.scons.SConsWrap.add_target" title="nestly.scons.SConsWrap.add_target"><tt class="xref py py-meth docutils literal"><span class="pre">add_target()</span></tt></a>: the name of the aggregate,
+which will default to the name of the function if none is specified.</p>
+</div>
+<div class="section" id="calling-commands-from-scons">
+<h2>Calling commands from SCons<a class="headerlink" href="#calling-commands-from-scons" title="Permalink to this headline">¶</a></h2>
+<p>While the previous example demonstrate how to use the various methods of
+<a class="reference internal" href="nestly.html#nestly.scons.SConsWrap" title="nestly.scons.SConsWrap"><tt class="xref py py-class docutils literal"><span class="pre">SConsWrap</span></tt></a>, they did not demonstrate how to actually call commands
+using SCons. The easiest way is to define the various targets from within the
+<tt class="docutils literal"><span class="pre">SConstruct</span></tt> file:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">from</span> <span class="nn">nestly.scons</span> <span class="kn">import</span> <span class="n">SConsWrap</span>
+<span class="kn">from</span> <span class="nn">nestly</span> <span class="kn">import</span> <span class="n">Nest</span>
+<span class="kn">import</span> <span class="nn">os</span>
+
+<span class="n">nest</span> <span class="o">=</span> <span class="n">Nest</span><span class="p">()</span>
+<span class="n">wrap</span> <span class="o">=</span> <span class="n">SConsWrap</span><span class="p">(</span><span class="n">nest</span><span class="p">,</span> <span class="s">&#39;build&#39;</span><span class="p">)</span>
+
+<span class="c"># Add a nest for each of our input files.</span>
+<span class="n">nest</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;input_file&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">join</span><span class="p">(</span><span class="s">&#39;inputs&#39;</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="s">&#39;inputs&#39;</span><span class="p">)],</span>
+         <span class="n">label_func</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">)</span>
+
+<span class="c"># Each input will get transformed each of these different ways.</span>
+<span class="n">nest</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;transformation&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;log&#39;</span><span class="p">,</span> <span class="s">&#39;unit&#39;</span><span class="p">,</span> <span class="s">&#39;asinh&#39;</span><span class="p">])</span>
+
+<span class="nd">@wrap.add_target</span><span class="p">()</span>
+<span class="k">def</span> <span class="nf">transformed</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="n">c</span><span class="p">):</span>
+    <span class="c"># The template for the command to run.</span>
+    <span class="n">action</span> <span class="o">=</span> <span class="s">&#39;guppy mft --transform {0[transformation]} $SOURCE -o $TARGET&#39;</span>
+    <span class="c"># Command will return a tuple of the targets; we want the only item.</span>
+    <span class="n">outfile</span><span class="p">,</span> <span class="o">=</span> <span class="n">Command</span><span class="p">(</span>
+        <span class="n">source</span><span class="o">=</span><span class="n">c</span><span class="p">[</span><span class="s">&#39;input_file&#39;</span><span class="p">],</span>
+        <span class="n">target</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="s">&#39;transformed.jplace&#39;</span><span class="p">),</span>
+        <span class="n">action</span><span class="o">=</span><span class="n">action</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">c</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">outfile</span>
+</pre></div>
+</div>
+<p>A function <a class="reference internal" href="nestly.html#nestly.scons.name_targets" title="nestly.scons.name_targets"><tt class="xref py py-func docutils literal"><span class="pre">name_targets()</span></tt></a> is also provided for more easily naming the
+targets of an SCons command:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="nd">@wrap.add_target</span><span class="p">(</span><span class="s">&#39;target1&#39;</span><span class="p">)</span>
+<span class="nd">@name_targets</span>
+<span class="k">def</span> <span class="nf">target1</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="n">c</span><span class="p">):</span>
+    <span class="k">return</span> <span class="s">&#39;outfile1&#39;</span><span class="p">,</span> <span class="s">&#39;outfile2&#39;</span><span class="p">,</span> <span class="n">Command</span><span class="p">(</span>
+        <span class="n">source</span><span class="o">=</span><span class="n">c</span><span class="p">[</span><span class="s">&#39;input_file&#39;</span><span class="p">],</span>
+        <span class="n">target</span><span class="o">=</span><span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="s">&#39;outfile1&#39;</span><span class="p">),</span>
+                <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="s">&#39;outfile2&#39;</span><span class="p">)],</span>
+        <span class="n">action</span><span class="o">=</span><span class="s">&quot;transform $SOURCE $TARGETS&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>In this case, <tt class="docutils literal"><span class="pre">target1</span></tt> will be a dict resembling <tt class="docutils literal"><span class="pre">{'outfile1':</span>
+<span class="pre">'build/outdir/outfile1',</span> <span class="pre">'outfile2':</span> <span class="pre">'build/outdir/outfile2'}</span></tt>.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last"><a class="reference internal" href="nestly.html#nestly.scons.name_targets" title="nestly.scons.name_targets"><tt class="xref py py-func docutils literal"><span class="pre">name_targets()</span></tt></a> does not preserve the name of the decorated function,
+so the name of the target <em>must</em> be provided as a parameter to
+<a class="reference internal" href="nestly.html#nestly.scons.SConsWrap.add_target" title="nestly.scons.SConsWrap.add_target"><tt class="xref py py-meth docutils literal"><span class="pre">add_target()</span></tt></a>.</p>
+</div>
+<p>A more involved, runnable example is in the <tt class="docutils literal"><span class="pre">examples/scons</span></tt> directory.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="examples.html" title="Examples"
+             >previous</a> |</li>
+        <li><a href="index.html">nestly 0.3 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Erick Matsen et al..
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.
+    </div>
+  </body>
+</html>

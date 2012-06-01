@@ -57,6 +57,7 @@
 <li><a class="reference internal" href="#">nestly Package</a><ul>
 <li><a class="reference internal" href="#id1"><tt class="docutils literal"><span class="pre">nestly</span></tt> Package</a></li>
 <li><a class="reference internal" href="#module-nestly.core"><tt class="docutils literal"><span class="pre">core</span></tt> Module</a></li>
+<li><a class="reference internal" href="#module-nestly.scons"><tt class="docutils literal"><span class="pre">scons</span></tt> Module</a></li>
 <li><a class="reference internal" href="#subpackages">Subpackages</a><ul>
 </ul>
 </li>
@@ -252,6 +253,85 @@ json-decoded contents of the control file.</li>
 </dd></dl>
 
 </div>
+<div class="section" id="module-nestly.scons">
+<span id="scons-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">scons</span></tt> Module<a class="headerlink" href="#module-nestly.scons" title="Permalink to this headline">¶</a></h2>
+<p>SCons integration for nestly.</p>
+<dl class="class">
+<dt id="nestly.scons.SConsWrap">
+<em class="property">class </em><tt class="descclassname">nestly.scons.</tt><tt class="descname">SConsWrap</tt><big>(</big><em>nest</em>, <em>dest_dir='.'</em><big>)</big><a class="reference internal" href="_modules/nestly/scons.html#SConsWrap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nestly.scons.SConsWrap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>A Nest wrapper to add SCons integration.</p>
+<p>This class wraps a Nest in order to provide methods which are useful for
+using nestly with SCons.</p>
+<dl class="method">
+<dt id="nestly.scons.SConsWrap.add">
+<tt class="descname">add</tt><big>(</big><em>*a</em>, <em>**kw</em><big>)</big><a class="reference internal" href="_modules/nestly/scons.html#SConsWrap.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nestly.scons.SConsWrap.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call .add on the wrapped Nest.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nestly.scons.SConsWrap.add_aggregate">
+<tt class="descname">add_aggregate</tt><big>(</big><em>data_fac</em>, <em>name=None</em><big>)</big><a class="reference internal" href="_modules/nestly/scons.html#SConsWrap.add_aggregate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nestly.scons.SConsWrap.add_aggregate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add an aggregate target to this nest.</p>
+<p>The first argument is a nullary factory function which will be called
+immediately for each of the current control dictionaries and stored in
+each dictionary with the given name like in <tt class="docutils literal"><span class="pre">add_target</span></tt>. After
+<tt class="docutils literal"><span class="pre">finalize_aggregate</span></tt> or <tt class="docutils literal"><span class="pre">finalize_all_aggregates</span></tt> are called, the
+decorated function will then be called in the same way as
+<tt class="docutils literal"><span class="pre">add_target</span></tt>, except with an additional argument: the value which was
+returned by the factory function.</p>
+<p>Since nests added after the aggregate can access the factory function&#8217;s
+value, it can be mutated to provide additional values for use when the
+decorated function is called.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nestly.scons.SConsWrap.add_nest">
+<tt class="descname">add_nest</tt><big>(</big><em>name=None</em>, <em>**kw</em><big>)</big><a class="reference internal" href="_modules/nestly/scons.html#SConsWrap.add_nest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nestly.scons.SConsWrap.add_nest" title="Permalink to this definition">¶</a></dt>
+<dd><p>A simple decorator which wraps nest.add.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nestly.scons.SConsWrap.add_target">
+<tt class="descname">add_target</tt><big>(</big><em>name=None</em><big>)</big><a class="reference internal" href="_modules/nestly/scons.html#SConsWrap.add_target"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nestly.scons.SConsWrap.add_target" title="Permalink to this definition">¶</a></dt>
+<dd><p>Add an SCons target to this nest.</p>
+<p>The function decorated will be immediately called with each of the
+output directories and current control dictionaries. Each result will
+be added to the respective control dictionary for later nests to
+access.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nestly.scons.SConsWrap.finalize_aggregate">
+<tt class="descname">finalize_aggregate</tt><big>(</big><em>aggregate</em><big>)</big><a class="reference internal" href="_modules/nestly/scons.html#SConsWrap.finalize_aggregate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nestly.scons.SConsWrap.finalize_aggregate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call the finalizers for one particular aggregate.</p>
+<p>Finalizing an aggregate this way means that it will not be finalized by
+any future calls to <tt class="docutils literal"><span class="pre">finalize_all_aggregates</span></tt>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="nestly.scons.SConsWrap.finalize_all_aggregates">
+<tt class="descname">finalize_all_aggregates</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/nestly/scons.html#SConsWrap.finalize_all_aggregates"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nestly.scons.SConsWrap.finalize_all_aggregates" title="Permalink to this definition">¶</a></dt>
+<dd><p>Call the finalizers for all defined aggregates.</p>
+<p>If any aggregates have been specifically finalized by
+<tt class="docutils literal"><span class="pre">finalize_aggregate</span></tt>, they will not be finalized again. This function
+itself calls <tt class="docutils literal"><span class="pre">finalize_aggregate</span></tt>; if <tt class="docutils literal"><span class="pre">finalize_all_aggregates</span></tt> is
+called twice, aggregates will not be finalized twice.</p>
+<p>Aggregates will be finalized in the same order in which they were
+defined.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="nestly.scons.name_targets">
+<tt class="descclassname">nestly.scons.</tt><tt class="descname">name_targets</tt><big>(</big><em>func</em><big>)</big><a class="reference internal" href="_modules/nestly/scons.html#name_targets"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nestly.scons.name_targets" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wrap a function such that returning <tt class="docutils literal"><span class="pre">'a',</span> <span class="pre">'b',</span> <span class="pre">'c',</span> <span class="pre">[1,</span> <span class="pre">2,</span> <span class="pre">3]</span></tt> transforms
+the value into <tt class="docutils literal"><span class="pre">dict(a=1,</span> <span class="pre">b=2,</span> <span class="pre">c=3)</span></tt>.</p>
+<p>This is useful in the case where the last parameter is an SCons command.</p>
+</dd></dl>
+
+</div>
 <div class="section" id="subpackages">
 <h2>Subpackages<a class="headerlink" href="#subpackages" title="Permalink to this headline">¶</a></h2>
 <div class="toctree-wrapper compound">
@@ -293,7 +373,7 @@ json-decoded contents of the control file.</li>
     </div>
     <div class="footer">
         &copy; Copyright 2011, Erick Matsen et al..
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.
     </div>
   </body>
 </html>

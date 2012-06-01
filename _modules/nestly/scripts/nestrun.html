@@ -73,12 +73,15 @@
 <span class="kn">import</span> <span class="nn">collections</span>
 <span class="kn">import</span> <span class="nn">csv</span>
 <span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">errno</span>
+<span class="kn">import</span> <span class="nn">functools</span>
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">os.path</span>
 <span class="kn">import</span> <span class="nn">shlex</span>
 <span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">import</span> <span class="nn">signal</span>
 <span class="kn">import</span> <span class="nn">subprocess</span>
 <span class="kn">import</span> <span class="nn">sys</span>
 
@@ -95,64 +98,108 @@
     <span class="n">logging</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&quot;Stopping all remaining processes&quot;</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">proc</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="n">procs</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
         <span class="n">logging</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;[</span><span class="si">%s</span><span class="s">] SIGTERM&quot;</span><span class="p">,</span> <span class="n">proc</span><span class="o">.</span><span class="n">pid</span><span class="p">)</span>
-        <span class="n">proc</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">proc</span><span class="o">.</span><span class="n">terminate</span><span class="p">()</span>
+        <span class="k">except</span> <span class="ne">OSError</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+            <span class="c"># we don&#39;t care if the process we tried to kill didn&#39;t exist.</span>
+            <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">errno</span> <span class="o">!=</span> <span class="n">errno</span><span class="o">.</span><span class="n">ESRCH</span><span class="p">:</span>
+                <span class="k">raise</span>
     <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 
-
+<div class="viewcode-block" id="sigterm_handler"><a class="viewcode-back" href="../../../nestly.scripts.html#nestly.scripts.nestrun.sigterm_handler">[docs]</a><span class="k">def</span> <span class="nf">sigterm_handler</span><span class="p">(</span><span class="n">nonlocal</span><span class="p">,</span> <span class="n">signum</span><span class="p">,</span> <span class="n">frame</span><span class="p">):</span>
+    <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s">&#39;SIGTERM received; no longer spawning jobs&#39;</span><span class="p">)</span>
+    <span class="n">nonlocal</span><span class="p">[</span><span class="s">&#39;spawn_jobs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">False</span>
+</div>
+<div class="viewcode-block" id="sigusr1_handler"><a class="viewcode-back" href="../../../nestly.scripts.html#nestly.scripts.nestrun.sigusr1_handler">[docs]</a><span class="k">def</span> <span class="nf">sigusr1_handler</span><span class="p">(</span><span class="n">running_procs</span><span class="p">,</span> <span class="n">signum</span><span class="p">,</span> <span class="n">frame</span><span class="p">):</span>
+    <span class="k">for</span> <span class="n">pid</span><span class="p">,</span> <span class="p">(</span><span class="n">proc</span><span class="p">,</span> <span class="n">_</span><span class="p">)</span> <span class="ow">in</span> <span class="n">running_procs</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;</span><span class="si">%5d</span><span class="s"> - in </span><span class="si">%s</span><span class="se">\n</span><span class="s">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">pid</span><span class="p">,</span> <span class="n">proc</span><span class="o">.</span><span class="n">working_dir</span><span class="p">))</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>  <span class="c"># just in case it&#39;s being buffered by something</span>
+</div>
+<div class="viewcode-block" id="sigint_handler"><a class="viewcode-back" href="../../../nestly.scripts.html#nestly.scripts.nestrun.sigint_handler">[docs]</a><span class="k">def</span> <span class="nf">sigint_handler</span><span class="p">(</span><span class="n">nonlocal</span><span class="p">,</span> <span class="n">write_this_summary</span><span class="p">,</span> <span class="n">running_procs</span><span class="p">,</span> <span class="n">signum</span><span class="p">,</span> <span class="n">frame</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">nonlocal</span><span class="p">[</span><span class="s">&#39;received_SIGINT&#39;</span><span class="p">]:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s">&#39;SIGINT received; terminating&#39;</span><span class="p">)</span>
+        <span class="n">_terminate_procs</span><span class="p">(</span><span class="n">running_procs</span><span class="p">)</span>
+        <span class="n">write_this_summary</span><span class="p">()</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logging</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s">&#39;SIGINT received; send again to terminate&#39;</span><span class="p">)</span>
+        <span class="n">nonlocal</span><span class="p">[</span><span class="s">&#39;received_SIGINT&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">True</span>
+</div>
 <div class="viewcode-block" id="invoke"><a class="viewcode-back" href="../../../nestly.scripts.html#nestly.scripts.nestrun.invoke">[docs]</a><span class="k">def</span> <span class="nf">invoke</span><span class="p">(</span><span class="n">max_procs</span><span class="p">,</span> <span class="n">data</span><span class="p">,</span> <span class="n">json_files</span><span class="p">):</span>
+    <span class="n">nonlocal</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;spawn_jobs&#39;</span><span class="p">:</span> <span class="bp">True</span><span class="p">,</span> <span class="s">&#39;received_SIGINT&#39;</span><span class="p">:</span> <span class="bp">False</span><span class="p">}</span>
     <span class="n">running_procs</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="n">all_procs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">def</span> <span class="nf">write_this_summary</span><span class="p">():</span>
+        <span class="n">write_summary</span><span class="p">(</span><span class="n">all_procs</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;summary_file&#39;</span><span class="p">])</span>
+
+    <span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGTERM</span><span class="p">,</span> <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="n">sigterm_handler</span><span class="p">,</span> <span class="n">nonlocal</span><span class="p">))</span>
+    <span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGUSR1</span><span class="p">,</span>
+        <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="n">sigusr1_handler</span><span class="p">,</span> <span class="n">running_procs</span><span class="p">))</span>
+    <span class="n">signal</span><span class="o">.</span><span class="n">signal</span><span class="p">(</span><span class="n">signal</span><span class="o">.</span><span class="n">SIGINT</span><span class="p">,</span>
+        <span class="n">functools</span><span class="o">.</span><span class="n">partial</span><span class="p">(</span><span class="n">sigint_handler</span><span class="p">,</span> <span class="n">nonlocal</span><span class="p">,</span> <span class="n">write_this_summary</span><span class="p">,</span>
+                          <span class="n">running_procs</span><span class="p">))</span>
+
     <span class="n">files</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">json_files</span><span class="p">)</span>
-    <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
-        <span class="k">while</span> <span class="nb">len</span><span class="p">(</span><span class="n">running_procs</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">max_procs</span><span class="p">:</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+            <span class="k">while</span> <span class="n">nonlocal</span><span class="p">[</span><span class="s">&#39;spawn_jobs&#39;</span><span class="p">]</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">running_procs</span><span class="p">)</span> <span class="o">&lt;</span> <span class="n">max_procs</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">json_file</span> <span class="o">=</span> <span class="n">files</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+                <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+                    <span class="c"># no more files; allow other processes to finish.</span>
+                    <span class="k">break</span>
+                <span class="n">g</span> <span class="o">=</span> <span class="n">worker</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">json_file</span><span class="p">)</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">proc</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+                <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
+                    <span class="c"># OSError thrown when command couldn&#39;t be started</span>
+                    <span class="n">logging</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s">&quot;Exception starting </span><span class="si">%s</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">json_file</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;stop_on_error&#39;</span><span class="p">]:</span>
+                        <span class="n">_terminate_procs</span><span class="p">(</span><span class="n">running_procs</span><span class="p">)</span>
+                        <span class="k">return</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">all_procs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">proc</span><span class="p">)</span>
+                    <span class="n">running_procs</span><span class="p">[</span><span class="n">proc</span><span class="o">.</span><span class="n">pid</span><span class="p">]</span> <span class="o">=</span> <span class="n">proc</span><span class="p">,</span> <span class="n">g</span>
+
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">json_file</span> <span class="o">=</span> <span class="n">files</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
-            <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
-                <span class="k">if</span> <span class="ow">not</span> <span class="n">running_procs</span><span class="p">:</span>
-                    <span class="n">write_summary</span><span class="p">(</span><span class="n">all_procs</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;summary_file&#39;</span><span class="p">])</span>
+                <span class="n">pid</span><span class="p">,</span> <span class="n">status</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
+            <span class="k">except</span> <span class="ne">OSError</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+                <span class="c"># wait(2) raising ECHILD means there&#39;s no child processes to wait</span>
+                <span class="c"># for anymore, so we&#39;re done.</span>
+                <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">errno</span> <span class="o">==</span> <span class="n">errno</span><span class="o">.</span><span class="n">ECHILD</span><span class="p">:</span>
                     <span class="k">return</span>
-                <span class="k">break</span>
-            <span class="n">g</span> <span class="o">=</span> <span class="n">worker</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">json_file</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">e</span><span class="o">.</span><span class="n">errno</span> <span class="o">==</span> <span class="n">errno</span><span class="o">.</span><span class="n">EINTR</span><span class="p">:</span>
+                    <span class="k">continue</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span>
+
+            <span class="c"># Pull the actual exit status - high byte of 16-bit number</span>
+            <span class="n">exit_status</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">WEXITSTATUS</span><span class="p">(</span><span class="n">status</span><span class="p">)</span>
+            <span class="n">proc</span><span class="p">,</span> <span class="n">g</span> <span class="o">=</span> <span class="n">running_procs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span>
+            <span class="n">proc</span><span class="o">.</span><span class="n">complete</span><span class="p">(</span><span class="n">exit_status</span><span class="p">)</span>
+
             <span class="k">try</span><span class="p">:</span>
-                <span class="n">proc</span> <span class="o">=</span> <span class="n">g</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
+                <span class="n">g</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
             <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
-                <span class="k">continue</span>
-            <span class="k">except</span> <span class="ne">OSError</span><span class="p">:</span>
-                <span class="c"># OSError thrown when command couldn&#39;t be started</span>
-                <span class="n">logging</span><span class="o">.</span><span class="n">exception</span><span class="p">(</span><span class="s">&quot;Exception starting </span><span class="si">%s</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">json_file</span><span class="p">)</span>
+                <span class="k">pass</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;worker generators should only yield once&#39;</span><span class="p">)</span>
+
+            <span class="c"># Check exit status, cancel jobs if stop_on_error specified and</span>
+            <span class="c"># non-zero</span>
+            <span class="k">if</span> <span class="n">exit_status</span><span class="p">:</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&#39;[</span><span class="si">%s</span><span class="s">] </span><span class="si">%s</span><span class="s"> Finished with non-zero exit status </span><span class="si">%s</span><span class="se">\n</span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span>
+                        <span class="n">pid</span><span class="p">,</span> <span class="n">proc</span><span class="o">.</span><span class="n">working_dir</span><span class="p">,</span> <span class="n">exit_status</span><span class="p">,</span> <span class="n">proc</span><span class="o">.</span><span class="n">log_tail</span><span class="p">())</span>
                 <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;stop_on_error&#39;</span><span class="p">]:</span>
                     <span class="n">_terminate_procs</span><span class="p">(</span><span class="n">running_procs</span><span class="p">)</span>
-                    <span class="n">write_summary</span><span class="p">(</span><span class="n">all_procs</span><span class="p">,</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;summary_file&#39;</span><span class="p">])</span>
                     <span class="k">return</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">all_procs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">proc</span><span class="p">)</span>
-                <span class="n">running_procs</span><span class="p">[</span><span class="n">proc</span><span class="o">.</span><span class="n">pid</span><span class="p">]</span> <span class="o">=</span> <span class="n">proc</span><span class="p">,</span> <span class="n">g</span>
-
-        <span class="n">pid</span><span class="p">,</span> <span class="n">status</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">wait</span><span class="p">()</span>
-
-        <span class="c"># Pull the actual exit status - high byte of 16-bit number</span>
-        <span class="n">exit_status</span> <span class="o">=</span> <span class="n">status</span> <span class="o">&gt;&gt;</span> <span class="mi">8</span>
-        <span class="n">proc</span><span class="p">,</span> <span class="n">g</span> <span class="o">=</span> <span class="n">running_procs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">pid</span><span class="p">)</span>
-        <span class="n">proc</span><span class="o">.</span><span class="n">complete</span><span class="p">(</span><span class="n">exit_status</span><span class="p">)</span>
-
-        <span class="k">try</span><span class="p">:</span>
-            <span class="n">g</span><span class="o">.</span><span class="n">next</span><span class="p">()</span>
-        <span class="k">except</span> <span class="ne">StopIteration</span><span class="p">:</span>
-            <span class="k">pass</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&#39;worker generators should only yield once&#39;</span><span class="p">)</span>
-
-        <span class="c"># Check exit status, cancel jobs if stop_on_error specified and</span>
-        <span class="c"># non-zero</span>
-        <span class="k">if</span> <span class="n">exit_status</span><span class="p">:</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&#39;[</span><span class="si">%s</span><span class="s">] </span><span class="si">%s</span><span class="s"> Finished with non-zero exit status </span><span class="si">%s</span><span class="se">\n</span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span>
-                    <span class="n">pid</span><span class="p">,</span> <span class="n">proc</span><span class="o">.</span><span class="n">working_dir</span><span class="p">,</span> <span class="n">exit_status</span><span class="p">,</span> <span class="n">proc</span><span class="o">.</span><span class="n">log_tail</span><span class="p">())</span>
-            <span class="k">if</span> <span class="n">data</span><span class="p">[</span><span class="s">&#39;stop_on_error&#39;</span><span class="p">]:</span>
-                <span class="n">_terminate_procs</span><span class="p">(</span><span class="n">running_procs</span><span class="p">)</span>
-                <span class="k">break</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;[</span><span class="si">%s</span><span class="s">] </span><span class="si">%s</span><span class="s"> Finished with </span><span class="si">%s</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">pid</span><span class="p">,</span> <span class="n">proc</span><span class="o">.</span><span class="n">working_dir</span><span class="p">,</span>
-                    <span class="n">exit_status</span><span class="p">)</span>
+                <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&quot;[</span><span class="si">%s</span><span class="s">] </span><span class="si">%s</span><span class="s"> Finished with </span><span class="si">%s</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">pid</span><span class="p">,</span> <span class="n">proc</span><span class="o">.</span><span class="n">working_dir</span><span class="p">,</span>
+                        <span class="n">exit_status</span><span class="p">)</span>
+    <span class="k">finally</span><span class="p">:</span>
+        <span class="n">write_this_summary</span><span class="p">()</span>
 
 </div>
 <div class="viewcode-block" id="write_summary"><a class="viewcode-back" href="../../../nestly.scripts.html#nestly.scripts.nestrun.write_summary">[docs]</a><span class="k">def</span> <span class="nf">write_summary</span><span class="p">(</span><span class="n">all_procs</span><span class="p">,</span> <span class="n">summary_file</span><span class="p">):</span>
@@ -258,7 +305,7 @@
         <span class="k">try</span><span class="p">:</span>
             <span class="n">shutil</span><span class="o">.</span><span class="n">copymode</span><span class="p">(</span><span class="n">template_file</span><span class="p">,</span> <span class="n">output_template</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">OSError</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
-            <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">errno</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">errno</span> <span class="o">==</span> <span class="n">errno</span><span class="o">.</span><span class="n">EPERM</span><span class="p">:</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="s">&quot;Couldn&#39;t set permissions on </span><span class="si">%s</span><span class="s">. &quot;</span>
                         <span class="s">&quot;Continuing with existing permissions&quot;</span><span class="p">,</span>
                         <span class="n">output_template</span><span class="p">)</span>
@@ -278,7 +325,16 @@
         <span class="k">try</span><span class="p">:</span>
             <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">p</span><span class="p">(</span><span class="n">log_file</span><span class="p">),</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">log</span><span class="p">:</span>
                 <span class="n">cmd</span> <span class="o">=</span> <span class="n">shlex</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="n">work</span><span class="p">)</span>
-                <span class="n">pr</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">log</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">log</span><span class="p">,</span> <span class="n">cwd</span><span class="o">=</span><span class="n">p</span><span class="p">())</span>
+                <span class="k">while</span> <span class="bp">True</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">pr</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">Popen</span><span class="p">(</span>
+                            <span class="n">cmd</span><span class="p">,</span> <span class="n">stdout</span><span class="o">=</span><span class="n">log</span><span class="p">,</span> <span class="n">stderr</span><span class="o">=</span><span class="n">log</span><span class="p">,</span> <span class="n">cwd</span><span class="o">=</span><span class="n">p</span><span class="p">())</span>
+                    <span class="k">except</span> <span class="ne">OSError</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">errno</span> <span class="o">!=</span> <span class="n">errno</span><span class="o">.</span><span class="n">EINTR</span><span class="p">:</span>
+                            <span class="k">raise</span>
+                        <span class="k">continue</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">break</span>
                 <span class="n">logging</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s">&#39;[</span><span class="si">%d</span><span class="s">] Started </span><span class="si">%s</span><span class="s"> in </span><span class="si">%s</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">pr</span><span class="o">.</span><span class="n">pid</span><span class="p">,</span> <span class="n">work</span><span class="p">,</span> <span class="n">p</span><span class="p">())</span>
                 <span class="n">nestproc</span> <span class="o">=</span> <span class="n">NestlyProcess</span><span class="p">(</span><span class="n">cmd</span><span class="p">,</span> <span class="n">p</span><span class="p">(),</span> <span class="n">pr</span><span class="p">)</span>
                 <span class="k">yield</span> <span class="n">nestproc</span>
@@ -405,7 +461,7 @@
     </div>
     <div class="footer">
         &copy; Copyright 2011, Erick Matsen et al..
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.
     </div>
   </body>
 </html>
