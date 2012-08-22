@@ -161,8 +161,8 @@ example.</p>
 <span class="c"># each containing at least the named key, along with the `update=True` flag.</span>
 <span class="c">#</span>
 <span class="c"># Here, &#39;run_count&#39; is the named key, and will be used to create a directory in the nest,</span>
-<span class="c"># and the value of &#39;function&#39; will be added to each control dictionary as well.</span>
-<span class="n">nest</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;run_count&#39;</span><span class="p">,</span> <span class="p">[{</span><span class="s">&#39;run_count&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="o">**</span><span class="n">i</span><span class="p">,</span> <span class="s">&#39;function&#39;</span><span class="p">:</span> <span class="s">&#39;pow&#39;</span><span class="p">}</span>
+<span class="c"># and the value of &#39;power&#39; will be added to each control dictionary as well.</span>
+<span class="n">nest</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;run_count&#39;</span><span class="p">,</span> <span class="p">[{</span><span class="s">&#39;run_count&#39;</span><span class="p">:</span> <span class="mi">10</span><span class="o">**</span><span class="n">i</span><span class="p">,</span> <span class="s">&#39;power&#39;</span><span class="p">:</span> <span class="n">i</span><span class="p">}</span>
                        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">xrange</span><span class="p">(</span><span class="mi">3</span><span class="p">)],</span> <span class="n">update</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
 
 <span class="c"># label_func can be used to generate a meaningful name. Here, it strips the all</span>
@@ -186,33 +186,6 @@ example.</p>
 </pre></div>
 </td></tr></table></div>
 <p>This example is then run with the <tt class="docutils literal"><span class="pre">../examples/basic_nest/do_nestrun.sh</span></tt> script.</p>
-<div class="highlight-sh"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
- 2
- 3
- 4
- 5
- 6
- 7
- 8
- 9
-10
-11
-12
-13</pre></div></td><td class="code"><div class="highlight"><pre><span class="c">#!/bin/sh</span>
-
-<span class="nb">set</span> -e
-<span class="nb">set</span> -u
-<span class="nb">set</span> -x
-
-<span class="c"># Run `echo.sh` using every control.json under the `runs` directory, 2</span>
-<span class="c"># processes at a time</span>
-nestrun --processes 2 --template-file echo.sh -d runs
-
-<span class="c"># Merge the CSV files named &#39;{strategy}.csv&#39; (where strategy value is taken</span>
-<span class="c"># from the control file)</span>
-nestagg delim <span class="s1">&#39;{strategy}.csv&#39;</span> -d runs -o aggregated.csv
-</pre></div>
-</td></tr></table></div>
 <p><tt class="docutils literal"><span class="pre">echo.sh</span></tt> is just the simple script that runs <tt class="docutils literal"><span class="pre">nestrun</span></tt> and aggregates the
 results into an <tt class="docutils literal"><span class="pre">aggregate.csv</span></tt> file:</p>
 <div class="highlight-sh"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
