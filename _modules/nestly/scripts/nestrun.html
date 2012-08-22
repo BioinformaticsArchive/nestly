@@ -85,6 +85,7 @@
 <span class="kn">import</span> <span class="nn">subprocess</span>
 <span class="kn">import</span> <span class="nn">sys</span>
 
+<span class="kn">from</span> <span class="nn">nestly.core</span> <span class="kn">import</span> <span class="n">control_iter</span>
 
 <span class="c"># Constants to be used as defaults.</span>
 <span class="n">MAX_PROCS</span> <span class="o">=</span> <span class="mi">2</span>                    <span class="c"># Set the default maximum number of child processes that can be spawned.</span>
@@ -391,9 +392,21 @@
 <span class="s">            does not execute commands.&quot;&quot;&quot;</span><span class="p">,</span> <span class="n">default</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
     <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;--summary-file&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">argparse</span><span class="o">.</span><span class="n">FileType</span><span class="p">(</span><span class="s">&#39;w&#39;</span><span class="p">),</span>
             <span class="n">help</span><span class="o">=</span><span class="s">&quot;&quot;&quot;Write a summary of the run to the specified file&quot;&quot;&quot;</span><span class="p">)</span>
-    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;json_files&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">extant_file</span><span class="p">,</span> <span class="n">nargs</span><span class="o">=</span><span class="s">&#39;+&#39;</span><span class="p">,</span>
-            <span class="n">help</span><span class="o">=</span><span class="s">&#39;Nestly control dictionaries&#39;</span><span class="p">)</span>
+
+    <span class="n">ctrl_group</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_argument_group</span><span class="p">(</span><span class="s">&#39;Control files&#39;</span><span class="p">)</span>
+    <span class="n">ctrl_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;json_files&#39;</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s">&#39;control_files&#39;</span><span class="p">,</span> <span class="nb">type</span><span class="o">=</span><span class="n">extant_file</span><span class="p">,</span>
+            <span class="n">nargs</span><span class="o">=</span><span class="s">&#39;*&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;&quot;&quot;Nestly control dictionaries&quot;&quot;&quot;</span><span class="p">)</span>
+    <span class="n">ctrl_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s">&#39;-d&#39;</span><span class="p">,</span> <span class="s">&#39;--directory&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s">&quot;&quot;&quot;Run on all control</span>
+<span class="s">            files under </span><span class="si">%(metavar)s</span><span class="s">. May be used in place of specifying control</span>
+<span class="s">            files.&quot;&quot;&quot;</span><span class="p">,</span> <span class="n">metavar</span><span class="o">=</span><span class="s">&#39;DIR&#39;</span><span class="p">)</span>
     <span class="n">arguments</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+
+
+    <span class="c"># Load controls</span>
+    <span class="k">if</span> <span class="nb">bool</span><span class="p">(</span><span class="n">arguments</span><span class="o">.</span><span class="n">directory</span><span class="p">)</span> <span class="o">==</span> <span class="nb">bool</span><span class="p">(</span><span class="n">arguments</span><span class="o">.</span><span class="n">json_files</span><span class="p">):</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s">&#39;Exactly one of `-d` and control_files must be specified.&#39;</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">arguments</span><span class="o">.</span><span class="n">directory</span><span class="p">:</span>
+        <span class="n">arguments</span><span class="o">.</span><span class="n">json_files</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">control_iter</span><span class="p">(</span><span class="n">arguments</span><span class="o">.</span><span class="n">directory</span><span class="p">))</span>
 
     <span class="n">template</span> <span class="o">=</span> <span class="n">arguments</span><span class="o">.</span><span class="n">template</span>
 
@@ -407,7 +420,7 @@
             <span class="c"># If using the default argument, the template must be executable:</span>
             <span class="k">if</span> <span class="p">(</span><span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">access</span><span class="p">(</span><span class="n">arguments</span><span class="o">.</span><span class="n">template_file</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">X_OK</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span>
                     <span class="n">arguments</span><span class="o">.</span><span class="n">dry_run</span><span class="p">):</span>
-                <span class="k">raise</span> <span class="ne">SystemExit</span><span class="p">(</span>
+                <span class="n">parser</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
                         <span class="s">&quot;{0} is not executable. Specify a template.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
                     <span class="n">arguments</span><span class="o">.</span><span class="n">template_file</span><span class="p">))</span>
 
@@ -420,12 +433,9 @@
     <span class="k">if</span> <span class="n">arguments</span><span class="o">.</span><span class="n">local_procs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
         <span class="n">max_procs</span> <span class="o">=</span> <span class="n">arguments</span><span class="o">.</span><span class="n">local_procs</span>
 
-    <span class="k">if</span> <span class="n">arguments</span><span class="o">.</span><span class="n">dry_run</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
-        <span class="n">dry_run</span> <span class="o">=</span> <span class="n">arguments</span><span class="o">.</span><span class="n">dry_run</span>
-
     <span class="c"># Create a dictionary that will be shared amongst all forked processes.</span>
     <span class="n">data</span> <span class="o">=</span> <span class="p">{}</span>
-    <span class="n">data</span><span class="p">[</span><span class="s">&#39;dry_run&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">dry_run</span>
+    <span class="n">data</span><span class="p">[</span><span class="s">&#39;dry_run&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">arguments</span><span class="o">.</span><span class="n">dry_run</span>
     <span class="n">data</span><span class="p">[</span><span class="s">&#39;start_directory&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()</span>
     <span class="n">data</span><span class="p">[</span><span class="s">&#39;template&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">template</span>
     <span class="n">data</span><span class="p">[</span><span class="s">&#39;template_file&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">arguments</span><span class="o">.</span><span class="n">template_file</span>

@@ -137,13 +137,10 @@ processes and their working directories to stderr, then flush stderr.</p>
 <div class="highlight-python"><pre>usage: nestrun.py [-h] [-j N] [--template 'template text'] [--stop-on-error]
                   [--template-file FILE] [--save-cmd-file SAVECMD_FILE]
                   [--log-file LOG_FILE | --no-log] [--dry-run]
-                  [--summary-file SUMMARY_FILE]
-                  json_files [json_files ...]
+                  [--summary-file SUMMARY_FILE] [-d DIR]
+                  [control_files [control_files ...]]
 
 nestrun - substitute values into a template and run commands in parallel.
-
-positional arguments:
-  json_files            Nestly control dictionaries
 
 optional arguments:
   -h, --help            show this help message and exit
@@ -164,20 +161,27 @@ optional arguments:
   --no-log              Don't create a log file
   --dry-run             Dry run mode, does not execute commands.
   --summary-file SUMMARY_FILE
-                        Write a summary of the run to the specified file</pre>
+                        Write a summary of the run to the specified file
+
+Control files:
+  control_files         Nestly control dictionaries
+  -d DIR, --directory DIR
+                        Run on all control files under DIR. May be used in
+                        place of specifying control files.</pre>
 </div>
 </div>
 </div>
 <div class="section" id="nestagg">
 <h2><tt class="docutils literal"><span class="pre">nestagg</span></tt><a class="headerlink" href="#nestagg" title="Permalink to this headline">¶</a></h2>
 <p>The <tt class="docutils literal"><span class="pre">nestagg</span></tt> command provides a mechanism for combining results of multiple
-runs.  Currently, the only supported action is merging delimited files from a
-set of leaves, adding values from the control dictionary on each.</p>
+runs, via a subcommand interface.  Currently, the only supported action is
+merging delimited files from a set of leaves, adding values from the control
+dictionary on each.  This is performed via <tt class="docutils literal"><span class="pre">nestagg</span> <span class="pre">delim</span></tt>.</p>
 <div class="section" id="id1">
 <h3>Help<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
 <div class="highlight-python"><pre>usage: nestagg.py delim [-h] [-k KEYS | -x EXCLUDE_KEYS] [-m {fail,warn}]
-                        [-s SEPARATOR] [-t] [-o OUTPUT]
-                        file_template control.json [control.json ...]
+                        [-d DIR] [-s SEPARATOR] [-t] [-o OUTPUT]
+                        file_template [control.json [control.json ...]]
 
 positional arguments:
   file_template         Template for the delimited file to read in each
@@ -193,6 +197,9 @@ optional arguments:
                         include [default: None]
   -m {fail,warn}, --missing-action {fail,warn}
                         Action to take when a file is missing [default: fail]
+  -d DIR, --directory DIR
+                        Run on all control files under DIR. May be used in
+                        place of specifying control files.
   -s SEPARATOR, --separator SEPARATOR
                         Separator [default: ,]
   -t, --tab             Files are tab-separated

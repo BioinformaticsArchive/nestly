@@ -130,7 +130,9 @@ example.</p>
 32
 33
 34
-35</pre></div></td><td class="code"><div class="highlight"><pre><span class="c">#!/usr/bin/env python</span>
+35
+36
+37</pre></div></td><td class="code"><div class="highlight"><pre><span class="c">#!/usr/bin/env python</span>
 
 <span class="kn">import</span> <span class="nn">glob</span>
 <span class="kn">import</span> <span class="nn">math</span>
@@ -158,7 +160,9 @@ example.</p>
 <span class="n">nest</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;base_dir&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">os</span><span class="o">.</span><span class="n">getcwd</span><span class="p">()],</span> <span class="n">create_dir</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
 
 <span class="c"># Any function taking one argument (control dictionary) and returning an</span>
-<span class="c"># iterable may also be used:</span>
+<span class="c"># iterable may also be used.</span>
+<span class="c"># This one just takes the logarithm of &#39;run_count&#39;.</span>
+<span class="c"># Since the function only returns a single result, we don&#39;t create a new directory.</span>
 <span class="k">def</span> <span class="nf">log_run_count</span><span class="p">(</span><span class="n">c</span><span class="p">):</span>
     <span class="n">run_count</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="s">&#39;run_count&#39;</span><span class="p">]</span>
     <span class="k">return</span> <span class="p">[</span><span class="n">math</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">run_count</span><span class="p">,</span> <span class="mi">10</span><span class="p">)]</span>
@@ -184,15 +188,15 @@ example.</p>
 
 <span class="nb">set</span> -e
 <span class="nb">set</span> -u
+<span class="nb">set</span> -x
 
-<span class="nv">CONTROLS</span><span class="o">=</span><span class="k">$(</span>find runs -name control.json<span class="k">)</span>
-<span class="nb">echo</span> <span class="nv">$CONTROLS</span>
-
-nestrun --processes 2 --template-file echo.sh <span class="nv">$CONTROLS</span>
+<span class="c"># Run `echo.sh` using every control.json under the `runs` directory, 2</span>
+<span class="c"># processes at a time</span>
+nestrun --processes 2 --template-file echo.sh -d runs
 
 <span class="c"># Merge the CSV files named &#39;{strategy}.csv&#39; (where strategy value is taken</span>
 <span class="c"># from the control file)</span>
-nestagg delim <span class="s1">&#39;{strategy}.csv&#39;</span> <span class="nv">$CONTROLS</span> -o aggregated.csv
+nestagg delim <span class="s1">&#39;{strategy}.csv&#39;</span> -d runs -o aggregated.csv
 </pre></div>
 </td></tr></table></div>
 <p><tt class="docutils literal"><span class="pre">echo.sh</span></tt> is just the simple script that runs <tt class="docutils literal"><span class="pre">nestrun</span></tt> and aggregates the
@@ -256,7 +260,9 @@ control dictionary:</p>
 37
 38
 39
-40</pre></div></td><td class="code"><div class="highlight"><pre><span class="c">#!/usr/bin/env python</span>
+40
+41
+42</pre></div></td><td class="code"><div class="highlight"><pre><span class="c">#!/usr/bin/env python</span>
 
 <span class="kn">import</span> <span class="nn">glob</span>
 <span class="kn">import</span> <span class="nn">os</span>
@@ -277,6 +283,8 @@ control dictionary:</p>
 <span class="c"># directories &quot;ethnicity&quot; and &quot;dietary&quot;.</span>
 <span class="n">nest</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;ethnicity&#39;</span><span class="p">,</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">startersdir</span><span class="p">,</span> <span class="s">&#39;*&#39;</span><span class="p">)),</span>
     <span class="n">label_func</span><span class="o">=</span><span class="n">bn</span><span class="p">)</span>
+<span class="c"># In the `dietary` key, the anonymous function `lambda ...` chooses as values</span>
+<span class="c"># names of directories the current `ethnicity` directory</span>
 <span class="n">nest</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;dietary&#39;</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">c</span><span class="p">:</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">c</span><span class="p">[</span><span class="s">&#39;ethnicity&#39;</span><span class="p">],</span> <span class="s">&#39;*&#39;</span><span class="p">)),</span>
     <span class="n">label_func</span><span class="o">=</span><span class="n">bn</span><span class="p">)</span>
 

@@ -159,8 +159,9 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">indent</span> <span class="o">=</span> <span class="n">indent</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fail_on_clash</span> <span class="o">=</span> <span class="n">fail_on_clash</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">warn_on_clash</span> <span class="o">=</span> <span class="n">warn_on_clash</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_levels</span> <span class="o">=</span> <span class="p">[]</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">base_dict</span> <span class="o">=</span> <span class="n">base_dict</span> <span class="ow">or</span> <span class="n">collections</span><span class="o">.</span><span class="n">OrderedDict</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">base_dict</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">base_dict</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">OrderedDict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_controls</span> <span class="o">=</span> <span class="p">[(</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">base_dict</span><span class="p">)]</span>
 
 <div class="viewcode-block" id="Nest.iter"><a class="viewcode-back" href="../../nestly.html#nestly.core.Nest.iter">[docs]</a>    <span class="k">def</span> <span class="nf">iter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -170,47 +171,10 @@
 <span class="sd">        :param root: Root directory</span>
 <span class="sd">        :rtype: Generator of ``(directory, control_dictionary)`` tuples.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">def</span> <span class="nf">inner</span><span class="p">(</span><span class="n">control</span><span class="p">,</span> <span class="n">nestables</span><span class="p">,</span> <span class="n">dirs</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
-            <span class="c">#FIXME: This is messy</span>
-            <span class="k">if</span> <span class="ow">not</span> <span class="n">dirs</span><span class="p">:</span>
-                <span class="n">dirs</span> <span class="o">=</span> <span class="p">[]</span>
-            <span class="k">if</span> <span class="n">nestables</span><span class="p">:</span>
-                <span class="c"># Still more nestables to consume.</span>
-                <span class="n">n</span> <span class="o">=</span> <span class="n">nestables</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-
-                <span class="n">result</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">nestable</span><span class="p">(</span><span class="n">control</span><span class="p">)</span>
-
-                <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">result</span><span class="p">:</span>
-                    <span class="n">ctl</span> <span class="o">=</span> <span class="n">control</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
-                    <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">update</span><span class="p">:</span>
-                        <span class="c"># Make sure expected key exists</span>
-                        <span class="k">if</span> <span class="ow">not</span> <span class="n">n</span><span class="o">.</span><span class="n">name</span> <span class="ow">in</span> <span class="n">r</span><span class="p">:</span>
-                            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s">&quot;Missing key for {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">name</span><span class="p">))</span>
-
-                        <span class="c"># Check for collisions</span>
-                        <span class="n">u</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">control</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">&amp;</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-                        <span class="k">if</span> <span class="n">u</span><span class="p">:</span>
-                            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fail_on_clash</span><span class="p">:</span>
-                                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s">&quot;Key overlap: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">u</span><span class="p">))</span>
-                            <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">warn_on_clash</span><span class="p">:</span>
-                                <span class="c">#FIXME: Something better here</span>
-                                <span class="k">print</span> <span class="o">&gt;&gt;</span><span class="n">sys</span><span class="o">.</span><span class="n">stderr</span><span class="p">,</span> <span class="s">&quot;Key overlap:&quot;</span><span class="p">,</span> <span class="n">u</span>
-                        <span class="n">ctl</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
-
-                        <span class="c"># For directory making below</span>
-                        <span class="n">r</span> <span class="o">=</span> <span class="n">r</span><span class="p">[</span><span class="n">n</span><span class="o">.</span><span class="n">name</span><span class="p">]</span>
-                    <span class="k">else</span><span class="p">:</span>
-                        <span class="n">ctl</span><span class="p">[</span><span class="n">n</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">r</span>
-
-                    <span class="n">new_dirs</span> <span class="o">=</span> <span class="p">(</span><span class="n">dirs</span> <span class="o">+</span> <span class="p">[</span><span class="n">n</span><span class="o">.</span><span class="n">label_func</span><span class="p">(</span><span class="n">r</span><span class="p">)]</span> <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">create_dir</span>
-                                <span class="k">else</span> <span class="n">dirs</span><span class="p">[:])</span>
-                    <span class="k">for</span> <span class="n">d</span><span class="p">,</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">inner</span><span class="p">(</span><span class="n">ctl</span><span class="p">,</span> <span class="n">nestables</span><span class="p">[</span><span class="mi">1</span><span class="p">:],</span> <span class="n">new_dirs</span><span class="p">):</span>
-                        <span class="k">yield</span> <span class="n">d</span><span class="p">,</span> <span class="n">c</span>
-            <span class="k">else</span><span class="p">:</span>
-                <span class="c"># At leaf node</span>
-                <span class="k">yield</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root</span> <span class="ow">or</span> <span class="s">&#39;&#39;</span><span class="p">,</span> <span class="o">*</span><span class="n">dirs</span><span class="p">),</span> <span class="n">control</span>
-
-        <span class="k">return</span> <span class="n">inner</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_dict</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_levels</span><span class="p">[:])</span>
+        <span class="k">if</span> <span class="n">root</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">iter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_controls</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">((</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">root</span><span class="p">,</span> <span class="n">outdir</span><span class="p">),</span> <span class="n">control</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">outdir</span><span class="p">,</span> <span class="n">control</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_controls</span><span class="p">)</span>
 </div>
     <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&quot;&quot;&quot;</span>
@@ -266,8 +230,34 @@
             <span class="n">nestable</span> <span class="o">=</span> <span class="n">_repeat_iter</span><span class="p">(</span><span class="n">old_nestable</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">template_subs</span><span class="p">:</span>
             <span class="n">nestable</span> <span class="o">=</span> <span class="n">_templated</span><span class="p">(</span><span class="n">nestable</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_levels</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_Nestable</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">nestable</span><span class="p">,</span> <span class="n">create_dir</span><span class="p">,</span> <span class="n">update</span><span class="p">,</span>
-                                      <span class="n">label_func</span><span class="p">))</span>
+
+        <span class="n">new_controls</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">outdir</span><span class="p">,</span> <span class="n">control</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_controls</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">r</span> <span class="ow">in</span> <span class="n">nestable</span><span class="p">(</span><span class="n">control</span><span class="p">):</span>
+                <span class="n">new_outdir</span><span class="p">,</span> <span class="n">new_control</span> <span class="o">=</span> <span class="n">outdir</span><span class="p">,</span> <span class="n">control</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+                <span class="k">if</span> <span class="n">update</span><span class="p">:</span>
+                    <span class="c"># Make sure expected key exists</span>
+                    <span class="k">if</span> <span class="n">name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">r</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s">&quot;Missing key for {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
+                    <span class="c"># Check for collisions</span>
+                    <span class="n">u</span> <span class="o">=</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">control</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span> <span class="o">&amp;</span> <span class="nb">frozenset</span><span class="p">(</span><span class="n">r</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+                    <span class="k">if</span> <span class="n">u</span><span class="p">:</span>
+                        <span class="n">msg</span> <span class="o">=</span> <span class="s">&quot;Key overlap: {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">u</span><span class="p">)</span>
+                        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fail_on_clash</span><span class="p">:</span>
+                            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">warn_on_clash</span><span class="p">:</span>
+                            <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                    <span class="n">new_control</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">r</span><span class="p">)</span>
+                    <span class="n">to_label</span> <span class="o">=</span> <span class="n">r</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">new_control</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">to_label</span> <span class="o">=</span> <span class="n">r</span>
+
+                <span class="k">if</span> <span class="n">create_dir</span><span class="p">:</span>
+                    <span class="n">new_outdir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="n">label_func</span><span class="p">(</span><span class="n">to_label</span><span class="p">))</span>
+                <span class="n">new_controls</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">new_outdir</span><span class="p">,</span> <span class="n">new_control</span><span class="p">))</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_controls</span> <span class="o">=</span> <span class="n">new_controls</span>
+
 </div></div>
 <div class="viewcode-block" id="nest_map"><a class="viewcode-back" href="../../nestly.html#nestly.core.nest_map">[docs]</a><span class="k">def</span> <span class="nf">nest_map</span><span class="p">(</span><span class="n">control_iter</span><span class="p">,</span> <span class="n">map_fn</span><span class="p">):</span>
     <span class="sd">&quot;&quot;&quot;</span>
