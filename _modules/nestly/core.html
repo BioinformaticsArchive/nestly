@@ -73,12 +73,12 @@
 <span class="kn">import</span> <span class="nn">collections</span>
 <span class="kn">import</span> <span class="nn">errno</span>
 <span class="kn">import</span> <span class="nn">functools</span>
-<span class="kn">import</span> <span class="nn">itertools</span>
 <span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">import</span> <span class="nn">os.path</span>
-<span class="kn">import</span> <span class="nn">sys</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
+
+<span class="kn">from</span> <span class="nn">._py3</span> <span class="kn">import</span> <span class="n">is_string</span><span class="p">,</span> <span class="n">imap</span>
 
 <span class="n">CONTROL_NAME</span> <span class="o">=</span> <span class="s">&#39;control.json&#39;</span>
 
@@ -102,7 +102,7 @@
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">try</span><span class="p">:</span>
         <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">d</span><span class="p">)</span>
-    <span class="k">except</span> <span class="ne">OSError</span><span class="p">,</span> <span class="n">e</span><span class="p">:</span>
+    <span class="k">except</span> <span class="ne">OSError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
         <span class="k">if</span> <span class="n">e</span><span class="o">.</span><span class="n">errno</span> <span class="o">!=</span> <span class="n">errno</span><span class="o">.</span><span class="n">EEXIST</span><span class="p">:</span>
             <span class="k">raise</span>
 
@@ -154,11 +154,13 @@
 <span class="sd">        (default: ``{}``)</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">control_name</span><span class="o">=</span><span class="n">CONTROL_NAME</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
-            <span class="n">fail_on_clash</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">warn_on_clash</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">base_dict</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+            <span class="n">fail_on_clash</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">warn_on_clash</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">base_dict</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
+            <span class="n">include_outdir</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">control_name</span> <span class="o">=</span> <span class="n">control_name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">indent</span> <span class="o">=</span> <span class="n">indent</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fail_on_clash</span> <span class="o">=</span> <span class="n">fail_on_clash</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">warn_on_clash</span> <span class="o">=</span> <span class="n">warn_on_clash</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">include_outdir</span> <span class="o">=</span> <span class="n">include_outdir</span>
         <span class="k">if</span> <span class="n">base_dict</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             <span class="n">base_dict</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">OrderedDict</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_controls</span> <span class="o">=</span> <span class="p">[(</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">base_dict</span><span class="p">)]</span>
@@ -223,7 +225,7 @@
         <span class="k">if</span> <span class="ow">not</span> <span class="nb">callable</span><span class="p">(</span><span class="n">nestable</span><span class="p">):</span>
             <span class="k">if</span> <span class="ow">not</span> <span class="n">_is_iter</span><span class="p">(</span><span class="n">nestable</span><span class="p">):</span>
                 <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s">&quot;Invalid nestable: &quot;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">nestable</span><span class="p">))</span>
-            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">nestable</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">is_string</span><span class="p">(</span><span class="n">nestable</span><span class="p">):</span>
                 <span class="n">warnings</span><span class="o">.</span><span class="n">warn</span><span class="p">(</span>
                         <span class="s">&quot;Passed a string as an iterable for name {0}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">name</span><span class="p">))</span>
             <span class="n">old_nestable</span> <span class="o">=</span> <span class="n">nestable</span>
@@ -254,6 +256,8 @@
 
                 <span class="k">if</span> <span class="n">create_dir</span><span class="p">:</span>
                     <span class="n">new_outdir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">outdir</span><span class="p">,</span> <span class="n">label_func</span><span class="p">(</span><span class="n">to_label</span><span class="p">))</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_outdir</span><span class="p">:</span>
+                    <span class="n">new_control</span><span class="p">[</span><span class="s">&#39;OUTDIR&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_outdir</span>
                 <span class="n">new_controls</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">new_outdir</span><span class="p">,</span> <span class="n">new_control</span><span class="p">))</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_controls</span> <span class="o">=</span> <span class="n">new_controls</span>
@@ -288,7 +292,7 @@
         <span class="n">dn</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">control_path</span><span class="p">)</span>
         <span class="k">return</span> <span class="n">map_fn</span><span class="p">(</span><span class="n">dn</span><span class="p">,</span> <span class="n">control</span><span class="p">)</span>
 
-    <span class="n">mapped</span> <span class="o">=</span> <span class="n">itertools</span><span class="o">.</span><span class="n">imap</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">control_iter</span><span class="p">)</span>
+    <span class="n">mapped</span> <span class="o">=</span> <span class="n">imap</span><span class="p">(</span><span class="n">fn</span><span class="p">,</span> <span class="n">control_iter</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">mapped</span>
 </div>
 <div class="viewcode-block" id="control_iter"><a class="viewcode-back" href="../../nestly.html#nestly.core.control_iter">[docs]</a><span class="k">def</span> <span class="nf">control_iter</span><span class="p">(</span><span class="n">base_dir</span><span class="p">,</span> <span class="n">control_name</span><span class="o">=</span><span class="n">CONTROL_NAME</span><span class="p">):</span>
@@ -320,7 +324,7 @@
     </div>
     <div class="footer">
         &copy; Copyright 2011, Erick Matsen et al..
-      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
     </div>
   </body>
 </html>

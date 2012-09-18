@@ -1,0 +1,324 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Comparing two algorithms &mdash; nestly 0.3 documentation</title>
+    
+    <link rel="stylesheet" href="_static/sphinxdoc.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0.3',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="nestly 0.3 documentation" href="index.html" />
+    <link rel="up" title="Examples" href="examples.html" />
+    <link rel="next" title="Building Nests" href="examples.building_nests.html" />
+    <link rel="prev" title="Examples" href="examples.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="examples.building_nests.html" title="Building Nests"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="examples.html" title="Examples"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">nestly 0.3 documentation</a> &raquo;</li>
+          <li><a href="examples.html" accesskey="U">Examples</a> &raquo;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Comparing two algorithms</a><ul>
+<li><a class="reference internal" href="#making-the-nest">Making the nest</a></li>
+<li><a class="reference internal" href="#running-the-algorithm">Running the algorithm</a></li>
+<li><a class="reference internal" href="#aggregating-results">Aggregating results</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="examples.html"
+                        title="previous chapter">Examples</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="examples.building_nests.html"
+                        title="next chapter">Building Nests</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/adcl.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="comparing-two-algorithms">
+<h1>Comparing two algorithms<a class="headerlink" href="#comparing-two-algorithms" title="Permalink to this headline">¶</a></h1>
+<p>This is a realistic example of using <tt class="docutils literal"><span class="pre">nestly</span></tt> to examine the performance of two algorithms. Source code to run it is available in <tt class="docutils literal"><span class="pre">examples/adcl/</span></tt>.</p>
+<p>We will use the <tt class="docutils literal"><span class="pre">min_adcl_tree</span></tt> subcommand of the <tt class="docutils literal"><span class="pre">rppr</span></tt> tool from the
+<tt class="docutils literal"><span class="pre">pplacer</span></tt> suite, available from <a class="reference external" href="http://matsen.fhcrc.org/pplacer">http://matsen.fhcrc.org/pplacer</a>.</p>
+<p>This tool chooses <tt class="docutils literal"><span class="pre">k</span></tt> <a class="reference external" href="http://matsen.fhcrc.org/general/2012/05/31/adcl-paper.html">representative leaves from a phylogenetic tree</a>.
+There are two implementations: the <strong>Full</strong> algorithm solves the problem
+exactly, while the <strong>PAM</strong> algorithm uses a variation on the <a class="reference external" href="http://en.wikipedia.org/wiki/K-medoids">partitioning
+among medoids</a> heuristic to find a solution.</p>
+<p>We&#8217;d like to compare the two algorithms on a variety of trees, using different values for <tt class="docutils literal"><span class="pre">k</span></tt>.</p>
+<div class="section" id="making-the-nest">
+<h2>Making the nest<a class="headerlink" href="#making-the-nest" title="Permalink to this headline">¶</a></h2>
+<p>Setting up the comparison is demonstrated in <tt class="docutils literal"><span class="pre">00make_nest.py</span></tt>, which builds
+up combinations of <tt class="docutils literal"><span class="pre">(algorithm,</span> <span class="pre">tree,</span> <span class="pre">k)</span></tt>:</p>
+<div class="highlight-python"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47</pre></div></td><td class="code"><div class="highlight"><pre><span class="c">#!/usr/bin/env python</span>
+
+<span class="c"># This example compares runtimes of two implementations of</span>
+<span class="c"># an algorithm to minimize the average distance to the closest leaf</span>
+<span class="c"># (Matsen et. al., accepted to Systematic Biology).</span>
+<span class="c">#</span>
+<span class="c"># To run it, you&#39;ll need the `rppr` binary on your path, distributed as part of</span>
+<span class="c"># the pplacer suite. Source code, or binaries for OS X and 64-bit Linux are</span>
+<span class="c"># available from http://matsen.fhcrc.org/pplacer/.</span>
+<span class="c">#</span>
+<span class="c"># The `rppr min_adcl_tree` subcommand takes a tree, an algorithm name, and</span>
+<span class="c"># the number of leaves to keep.</span>
+<span class="c">#</span>
+<span class="c"># We wish to explore the runtime, over each tree, for various leaf counts.</span>
+
+<span class="kn">import</span> <span class="nn">glob</span>
+<span class="kn">from</span> <span class="nn">os.path</span> <span class="kn">import</span> <span class="n">abspath</span>
+
+<span class="kn">from</span> <span class="nn">nestly</span> <span class="kn">import</span> <span class="n">Nest</span><span class="p">,</span> <span class="n">stripext</span>
+
+<span class="c"># The `trees` directory contains 5 trees, each with 1000 leaves.</span>
+<span class="c"># We want to run each algorithm on all of them.</span>
+<span class="n">trees</span> <span class="o">=</span> <span class="p">[</span><span class="n">abspath</span><span class="p">(</span><span class="n">f</span><span class="p">)</span> <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">glob</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="s">&#39;trees/*.tre&#39;</span><span class="p">)]</span>
+
+<span class="n">n</span> <span class="o">=</span> <span class="n">Nest</span><span class="p">()</span>
+
+<span class="c"># We&#39;ll try both algorithms</span>
+<span class="n">n</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;algorithm&#39;</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;full&#39;</span><span class="p">,</span> <span class="s">&#39;pam&#39;</span><span class="p">])</span>
+<span class="c"># For every tree</span>
+<span class="n">n</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;tree&#39;</span><span class="p">,</span> <span class="n">trees</span><span class="p">,</span> <span class="n">label_func</span><span class="o">=</span><span class="n">stripext</span><span class="p">)</span>
+
+<span class="c"># Store the number of leaves - always 1000 here</span>
+<span class="n">n</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;n_leaves&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mi">1000</span><span class="p">],</span> <span class="n">create_dir</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+
+<span class="c"># Now we vary the number of leaves to keep (k)</span>
+<span class="c"># Sample between 1 and the total number of leaves.</span>
+<span class="k">def</span> <span class="nf">k</span><span class="p">(</span><span class="n">c</span><span class="p">):</span>
+    <span class="n">n_leaves</span> <span class="o">=</span> <span class="n">c</span><span class="p">[</span><span class="s">&#39;n_leaves&#39;</span><span class="p">]</span>
+    <span class="k">return</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_leaves</span><span class="p">,</span> <span class="n">n_leaves</span> <span class="o">//</span> <span class="mi">10</span><span class="p">)</span>
+
+<span class="c"># Add `k` to the nest.</span>
+<span class="c"># This will call k with each combination of (algorithm, tree, n_leaves).</span>
+<span class="c"># Each value returned will be used as a possible value for `k`</span>
+<span class="n">n</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="s">&#39;k&#39;</span><span class="p">,</span> <span class="n">k</span><span class="p">)</span>
+
+<span class="c"># Build the nest:</span>
+<span class="n">n</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="s">&#39;runs&#39;</span><span class="p">)</span>
+</pre></div>
+</td></tr></table></div>
+<p>Running that:</p>
+<div class="highlight-sh"><div class="highlight"><pre><span class="nv">$ </span>./00make_nest.py
+</pre></div>
+</div>
+<p>Creates a new directory, <tt class="docutils literal"><span class="pre">runs</span></tt>.</p>
+<p>Within this directory are subdirectories for each algorithm:</p>
+<div class="highlight-python"><div class="highlight"><pre><span class="n">runs</span><span class="o">/</span><span class="n">full</span>
+<span class="n">runs</span><span class="o">/</span><span class="n">pam</span>
+</pre></div>
+</div>
+<p>Each of these contains a directory for each tree used:</p>
+<div class="highlight-sh"><div class="highlight"><pre><span class="nv">$ </span>ls runs/pam
+random001  random002  random003  random004  random005
+</pre></div>
+</div>
+<p>Within each of <em>these</em> subdirectories are directories for each choice of <tt class="docutils literal"><span class="pre">k</span></tt>.</p>
+<div class="highlight-sh"><div class="highlight"><pre><span class="nv">$ </span>ls runs/pam/random001
+1  101  201  301  401  501  601  701  801  901
+</pre></div>
+</div>
+<p>These directories are leaves. There is a <a class="reference external" href="http://www.json.org">JSON</a> file in each, containing the choices made. For example,
+<tt class="docutils literal"><span class="pre">runs/full/random003/401/control.json</span></tt> contains:</p>
+<div class="highlight-javascript"><div class="highlight"><pre><span class="p">{</span>
+  <span class="s2">&quot;algorithm&quot;</span><span class="o">:</span> <span class="s2">&quot;full&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;tree&quot;</span><span class="o">:</span> <span class="s2">&quot;/home/cmccoy/development/nestly/examples/adcl/trees/random003.tre&quot;</span><span class="p">,</span>
+  <span class="s2">&quot;n_leaves&quot;</span><span class="o">:</span> <span class="mi">1000</span><span class="p">,</span>
+  <span class="s2">&quot;k&quot;</span><span class="o">:</span> <span class="mi">401</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="running-the-algorithm">
+<h2>Running the algorithm<a class="headerlink" href="#running-the-algorithm" title="Permalink to this headline">¶</a></h2>
+<p>The <tt class="docutils literal"><span class="pre">nestrun</span></tt> command-line tool allows you to run a command for each combination of parameters in a nest.
+It allows you to substitute parameters chosen by surrounding them in curly brackets, e.g. <tt class="docutils literal"><span class="pre">{algorithm}</span></tt>.</p>
+<p>To see how long, and how much memory each run uses, we&#8217;ll use the short shell script <tt class="docutils literal"><span class="pre">time_rppr.sh</span></tt>:</p>
+<div class="highlight-sh"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre>1
+2
+3
+4
+5
+6</pre></div></td><td class="code"><div class="highlight"><pre><span class="c">#!/bin/sh</span>
+
+<span class="nb">export </span><span class="nv">TIME</span><span class="o">=</span><span class="s1">&#39;elapsed,maxmem,exitstatus\n%e,%M,%x&#39;</span>
+
+/usr/bin/time -o time.csv <span class="se">\</span>
+  rppr min_adcl_tree --algorithm <span class="o">{</span>algorithm<span class="o">}</span> --leaves <span class="o">{</span>k<span class="o">}</span> <span class="o">{</span>tree<span class="o">}</span>
+</pre></div>
+</td></tr></table></div>
+<p>Note the placeholders for the parameters to be provided at runtime: <tt class="docutils literal"><span class="pre">k</span></tt>, <tt class="docutils literal"><span class="pre">tree</span></tt>, and <tt class="docutils literal"><span class="pre">algorithm</span></tt>.</p>
+<p>Running a script like <tt class="docutils literal"><span class="pre">time_rppr.sh</span></tt> on every experiment within a nest in parallel is facilitated by the <tt class="docutils literal"><span class="pre">nestrun</span></tt> script distributed with <tt class="docutils literal"><span class="pre">nestly</span></tt>:</p>
+<div class="highlight-sh"><div class="highlight"><pre><span class="nv">$ </span>nestrun -j 4 --template-file time_rppr.sh -d runs
+</pre></div>
+</div>
+<p>(this will take awhile)</p>
+</div>
+<div class="section" id="aggregating-results">
+<h2>Aggregating results<a class="headerlink" href="#aggregating-results" title="Permalink to this headline">¶</a></h2>
+<p>Now we have a little CSV file in each leaf directory, containing the running time:</p>
+<div class="highlight-python"><pre>|----------+--------+-------------|
+|  elapsed | maxmem | exitstatus  |
+|----------+--------+-------------|
+|  17.78   | 471648 | 0           |
+|----------+--------+-------------|</pre>
+</div>
+<p>To analyze these en-masse, we need to combine them and add information about the parameters used to generate them. The <tt class="docutils literal"><span class="pre">nestagg</span></tt> script does just this.</p>
+<div class="highlight-sh"><div class="highlight"><pre><span class="nv">$ </span>nestagg delim -d runs -o results.csv time.csv -k algorithm,k,tree
+</pre></div>
+</div>
+<p><tt class="docutils literal"><span class="pre">results.csv</span></tt>:</p>
+<div class="highlight-python"><pre>|----------+---------+------------+-----------+---------------------------------------+------|
+|  elapsed | maxmem  | exitstatus | algorithm | tree                                  | k    |
+|----------+---------+------------+-----------+---------------------------------------+------|
+|  17.04   | 941328  | 0          | full      | .../examples/adcl/trees/random001.tre | 1    |
+|  20.86   | 944336  | 0          | full      | .../examples/adcl/trees/random001.tre | 101  |
+|  31.75   | 944320  | 0          | full      | .../examples/adcl/trees/random001.tre | 201  |
+|  39.34   | 980048  | 0          | full      | .../examples/adcl/trees/random001.tre | 301  |
+|  37.84   | 1118960 | 0          | full      | .../examples/adcl/trees/random001.tre | 401  |
+|  42.15   | 1382000 | 0          | full      | .../examples/adcl/trees/random001.tre | 501  |
+etc</pre>
+</div>
+<p>Now we have something we can look at!</p>
+<img alt="_images/adcl_plot_result.png" src="_images/adcl_plot_result.png" />
+<p>So: PAM is faster for large <tt class="docutils literal"><span class="pre">k</span></tt>, and always has lower maximum memory use.</p>
+<p>(generated by <tt class="docutils literal"><span class="pre">examples/adcl/03analyze.R</span></tt>)</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="examples.building_nests.html" title="Building Nests"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="examples.html" title="Examples"
+             >previous</a> |</li>
+        <li><a href="index.html">nestly 0.3 documentation</a> &raquo;</li>
+          <li><a href="examples.html" >Examples</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2011, Erick Matsen et al..
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+    </div>
+  </body>
+</html>
