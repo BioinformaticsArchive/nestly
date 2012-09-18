@@ -113,9 +113,10 @@ get immediately called, but rather when the <a class="reference internal" href="
 is called.</p>
 <div class="section" id="constructing-an-sconswrap">
 <h2>Constructing an <tt class="docutils literal"><span class="pre">SConsWrap</span></tt><a class="headerlink" href="#constructing-an-sconswrap" title="Permalink to this headline">¶</a></h2>
-<p><tt class="docutils literal"><span class="pre">SConsWrap</span></tt> objects wrap and modify a <tt class="docutils literal"><span class="pre">Nest</span></tt> object. Optionally, a
-destination directory can be given to the <tt class="docutils literal"><span class="pre">SConsWrap</span></tt> which will be passed to
-<a class="reference internal" href="nestly.html#nestly.core.Nest.iter" title="nestly.core.Nest.iter"><tt class="xref py py-meth docutils literal"><span class="pre">Nest.iter()</span></tt></a>:</p>
+<p><tt class="docutils literal"><span class="pre">SConsWrap</span></tt> objects wrap and modify a <tt class="docutils literal"><span class="pre">Nest</span></tt> object. Each <tt class="docutils literal"><span class="pre">Nest</span></tt> object
+needs to have been created with <tt class="docutils literal"><span class="pre">include_outdir=True</span></tt>, which is the default.</p>
+<p>Optionally, a destination directory can be given to the <tt class="docutils literal"><span class="pre">SConsWrap</span></tt> which
+will be passed to <a class="reference internal" href="nestly.html#nestly.core.Nest.iter" title="nestly.core.Nest.iter"><tt class="xref py py-meth docutils literal"><span class="pre">Nest.iter()</span></tt></a>:</p>
 <div class="highlight-python"><div class="highlight"><pre><span class="gp">&gt;&gt;&gt; </span><span class="n">nest</span> <span class="o">=</span> <span class="n">Nest</span><span class="p">()</span>
 <span class="gp">&gt;&gt;&gt; </span><span class="n">wrap</span> <span class="o">=</span> <span class="n">SConsWrap</span><span class="p">(</span><span class="n">nest</span><span class="p">,</span> <span class="n">dest_dir</span><span class="o">=</span><span class="s">&#39;build&#39;</span><span class="p">)</span>
 </pre></div>
@@ -151,9 +152,12 @@ function. As a result, the following example is also equivalent:</p>
     <span class="k">return</span> <span class="p">[</span><span class="s">&#39;  __&#39;</span> <span class="o">+</span> <span class="n">c</span><span class="p">[</span><span class="s">&#39;nest1&#39;</span><span class="p">],</span> <span class="n">c</span><span class="p">[</span><span class="s">&#39;nest1&#39;</span><span class="p">]</span> <span class="o">+</span> <span class="s">&#39;__  &#39;</span><span class="p">]</span>
 </pre></div>
 </div>
-<p><a class="reference internal" href="nestly.html#nestly.scons.SConsWrap.add_nest" title="nestly.scons.SConsWrap.add_nest"><tt class="xref py py-meth docutils literal"><span class="pre">add_nest()</span></tt></a> must always be called before being applied as a
-decorator, though. <tt class="docutils literal"><span class="pre">&#64;wrap.add_nest</span></tt> is not valid; the correct usage is
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last"><a class="reference internal" href="nestly.html#nestly.scons.SConsWrap.add_nest" title="nestly.scons.SConsWrap.add_nest"><tt class="xref py py-meth docutils literal"><span class="pre">add_nest()</span></tt></a> must always be called before being applied as a
+decorator. <tt class="docutils literal"><span class="pre">&#64;wrap.add_nest</span></tt> is not valid; the correct usage is
 <tt class="docutils literal"><span class="pre">&#64;wrap.add_nest()</span></tt> if no other parameters are specified.</p>
+</div>
 </div>
 <div class="section" id="adding-targets">
 <h2>Adding targets<a class="headerlink" href="#adding-targets" title="Permalink to this headline">¶</a></h2>

@@ -109,7 +109,7 @@ combinatorial choices of parameters easier.</p>
 <p>Core functions for building nests.</p>
 <dl class="class">
 <dt id="nestly.core.Nest">
-<em class="property">class </em><tt class="descclassname">nestly.core.</tt><tt class="descname">Nest</tt><big>(</big><em>control_name='control.json'</em>, <em>indent=2</em>, <em>fail_on_clash=False</em>, <em>warn_on_clash=True</em>, <em>base_dict=None</em>, <em>include_outdir=False</em><big>)</big><a class="reference internal" href="_modules/nestly/core.html#Nest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nestly.core.Nest" title="Permalink to this definition">¶</a></dt>
+<em class="property">class </em><tt class="descclassname">nestly.core.</tt><tt class="descname">Nest</tt><big>(</big><em>control_name='control.json'</em>, <em>indent=2</em>, <em>fail_on_clash=False</em>, <em>warn_on_clash=True</em>, <em>base_dict=None</em>, <em>include_outdir=True</em><big>)</big><a class="reference internal" href="_modules/nestly/core.html#Nest"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nestly.core.Nest" title="Permalink to this definition">¶</a></dt>
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
 <p>Nests are used to build nested parameter selections, culminating in a
 directory structure representing choices made, and a JSON dictionary with
@@ -129,6 +129,8 @@ previous value</li>
 a previous value</li>
 <li><strong>base_dict</strong> &#8211; Base dictionary to start all control dictionaries from
 (default: <tt class="docutils literal"><span class="pre">{}</span></tt>)</li>
+<li><strong>include_outdir</strong> &#8211; If true, include an OUTDIR key in every control
+indicating the directory this control would be written to.</li>
 </ul>
 </td>
 </tr>
@@ -263,6 +265,8 @@ json-decoded contents of the control file.</li>
 <p>A Nest wrapper to add SCons integration.</p>
 <p>This class wraps a Nest in order to provide methods which are useful for
 using nestly with SCons.</p>
+<p>A Nest passed to SConsWrap must have been created with include_outdir=True,
+which is the default.</p>
 <dl class="method">
 <dt id="nestly.scons.SConsWrap.add">
 <tt class="descname">add</tt><big>(</big><em>*a</em>, <em>**kw</em><big>)</big><a class="reference internal" href="_modules/nestly/scons.html#SConsWrap.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#nestly.scons.SConsWrap.add" title="Permalink to this definition">¶</a></dt>

@@ -24,9 +24,11 @@ is called.
 Constructing an ``SConsWrap``
 =============================
 
-``SConsWrap`` objects wrap and modify a ``Nest`` object. Optionally, a
-destination directory can be given to the ``SConsWrap`` which will be passed to
-:meth:`Nest.iter() <nestly.core.Nest.iter>`::
+``SConsWrap`` objects wrap and modify a ``Nest`` object. Each ``Nest`` object
+needs to have been created with ``include_outdir=True``, which is the default.
+
+Optionally, a destination directory can be given to the ``SConsWrap`` which
+will be passed to :meth:`Nest.iter() <nestly.core.Nest.iter>`::
 
     >>> nest = Nest()
     >>> wrap = SConsWrap(nest, dest_dir='build')
@@ -63,9 +65,12 @@ function. As a result, the following example is also equivalent::
     def nest2(c):
         return ['  __' + c['nest1'], c['nest1'] + '__  ']
 
-:meth:`~SConsWrap.add_nest` must always be called before being applied as a
-decorator, though. ``@wrap.add_nest`` is not valid; the correct usage is
-``@wrap.add_nest()`` if no other parameters are specified.
+
+.. note ::
+
+  :meth:`~SConsWrap.add_nest` must always be called before being applied as a
+  decorator. ``@wrap.add_nest`` is not valid; the correct usage is
+  ``@wrap.add_nest()`` if no other parameters are specified.
 
 Adding targets
 ==============
