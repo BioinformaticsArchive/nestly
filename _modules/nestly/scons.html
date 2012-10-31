@@ -87,6 +87,9 @@
 
 <span class="sd">    This class wraps a Nest in order to provide methods which are useful for</span>
 <span class="sd">    using nestly with SCons.</span>
+
+<span class="sd">    A Nest passed to SConsWrap must have been created with include_outdir=True,</span>
+<span class="sd">    which is the default.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
 
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">nest</span><span class="p">,</span> <span class="n">dest_dir</span><span class="o">=</span><span class="s">&#39;.&#39;</span><span class="p">):</span>
@@ -96,7 +99,6 @@
 <span class="sd">        directories.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">nest</span> <span class="o">=</span> <span class="n">nest</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">nest</span><span class="o">.</span><span class="n">include_outdir</span> <span class="o">=</span> <span class="bp">True</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">dest_dir</span> <span class="o">=</span> <span class="n">dest_dir</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">aggregates</span> <span class="o">=</span> <span class="n">OrderedDict</span><span class="p">()</span>
 

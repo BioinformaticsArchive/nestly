@@ -258,6 +258,8 @@ It allows you to substitute parameters chosen by surrounding them in curly brack
 </pre></div>
 </div>
 <p>(this will take awhile)</p>
+<p>This command runs the shell script <tt class="docutils literal"><span class="pre">time_rppr.sh</span></tt> for each parameter choice, substituting the appropriate parameters.
+The <tt class="docutils literal"><span class="pre">-j</span> <span class="pre">4</span></tt> flag indicates that 4 processors should be used.</p>
 </div>
 <div class="section" id="aggregating-results">
 <h2>Aggregating results<a class="headerlink" href="#aggregating-results" title="Permalink to this headline">¶</a></h2>
@@ -272,7 +274,11 @@ It allows you to substitute parameters chosen by surrounding them in curly brack
 <div class="highlight-sh"><div class="highlight"><pre><span class="nv">$ </span>nestagg delim -d runs -o results.csv time.csv -k algorithm,k,tree
 </pre></div>
 </div>
-<p><tt class="docutils literal"><span class="pre">results.csv</span></tt>:</p>
+<p>Where <tt class="docutils literal"><span class="pre">-d</span> <span class="pre">runs</span></tt> indicates the directory containing program runs; <tt class="docutils literal"><span class="pre">-o</span>
+<span class="pre">results.csv</span></tt> specifies where to write the output; <tt class="docutils literal"><span class="pre">time.csv</span></tt> gives the name
+of the file in each leaf directory, and <tt class="docutils literal"><span class="pre">-k</span> <span class="pre">algorithm,k,tree</span></tt> lists the
+parameters to add to each row of the CSV files.</p>
+<p>Looking at <tt class="docutils literal"><span class="pre">results.csv</span></tt>:</p>
 <div class="highlight-python"><pre>|----------+---------+------------+-----------+---------------------------------------+------|
 |  elapsed | maxmem  | exitstatus | algorithm | tree                                  | k    |
 |----------+---------+------------+-----------+---------------------------------------+------|

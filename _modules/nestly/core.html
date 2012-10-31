@@ -152,10 +152,12 @@
 <span class="sd">        a previous value</span>
 <span class="sd">    :param base_dict: Base dictionary to start all control dictionaries from</span>
 <span class="sd">        (default: ``{}``)</span>
+<span class="sd">    :param include_outdir: If true, include an OUTDIR key in every control</span>
+<span class="sd">        indicating the directory this control would be written to.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">control_name</span><span class="o">=</span><span class="n">CONTROL_NAME</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
             <span class="n">fail_on_clash</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="n">warn_on_clash</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">base_dict</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span>
-            <span class="n">include_outdir</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+            <span class="n">include_outdir</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">control_name</span> <span class="o">=</span> <span class="n">control_name</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">indent</span> <span class="o">=</span> <span class="n">indent</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">fail_on_clash</span> <span class="o">=</span> <span class="n">fail_on_clash</span>
@@ -163,6 +165,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">include_outdir</span> <span class="o">=</span> <span class="n">include_outdir</span>
         <span class="k">if</span> <span class="n">base_dict</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
             <span class="n">base_dict</span> <span class="o">=</span> <span class="n">collections</span><span class="o">.</span><span class="n">OrderedDict</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">include_outdir</span><span class="p">:</span>
+            <span class="n">base_dict</span><span class="p">[</span><span class="s">&#39;OUTDIR&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_controls</span> <span class="o">=</span> <span class="p">[(</span><span class="s">&#39;&#39;</span><span class="p">,</span> <span class="n">base_dict</span><span class="p">)]</span>
 
 <div class="viewcode-block" id="Nest.iter"><a class="viewcode-back" href="../../nestly.html#nestly.core.Nest.iter">[docs]</a>    <span class="k">def</span> <span class="nf">iter</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">root</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
